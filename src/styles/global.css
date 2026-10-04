@@ -73,8 +73,11 @@
   --lane-2: #4aa877;
   --lane-3: #8fc9ab;
 
-  --shadow-1: 0 1px 2px #0f151a0a;
-  --shadow-2: 0 8px 28px -12px #0f151a24;
+  /* 分层着色阴影：接触影 + 环境影，色相跟随中性色而非纯黑 */
+  --shadow-1: 0 1px 1px #0f151a08, 0 1px 2px #0f151a0a;
+  --shadow-2: 0 1px 2px #0f151a0a, 0 12px 32px -12px #0f151a2e;
+  /* 面板顶缘高光，制造物理厚度 */
+  --edge-hi: #ffffff99;
 }
 
 html[data-theme='dark'] {
@@ -100,8 +103,9 @@ html[data-theme='dark'] {
   --lane-2: #38976a;
   --lane-3: #2a6b4d;
 
-  --shadow-1: 0 1px 2px #00000040;
-  --shadow-2: 0 10px 32px -14px #00000080;
+  --shadow-1: 0 1px 1px #00000033, 0 1px 2px #00000040;
+  --shadow-2: 0 1px 2px #00000040, 0 14px 36px -14px #0000008c;
+  --edge-hi: #ffffff0a;
 }
 
 @theme inline {
@@ -238,6 +242,7 @@ html[data-theme='dark'] {
     background-color 0.18s ease,
     border-color 0.18s ease,
     color 0.18s ease,
+    box-shadow 0.18s ease,
     transform 0.12s ease;
 }
 .btn:active {
@@ -248,9 +253,11 @@ html[data-theme='dark'] {
   background: var(--brand);
   color: var(--on-brand);
   border: 1px solid transparent;
+  box-shadow: var(--shadow-1);
 }
 .btn-primary:hover {
   background: var(--brand-hover);
+  box-shadow: var(--shadow-2);
 }
 
 .btn-ghost {
@@ -261,6 +268,24 @@ html[data-theme='dark'] {
 .btn-ghost:hover {
   border-color: var(--hair-2);
   background: var(--paper-2);
+}
+
+/* 卡片悬浮：轻微抬升 + 环境影，用于 bento 等可感知容器 */
+.lift {
+  transition:
+    transform 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.28s ease;
+}
+.lift:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-2);
+  border-color: var(--hair-2);
+}
+
+/* 英雄区品牌色微光：单一强调色的低浓度径向晕染，不用网格线/紫渐变 */
+.hero-glow {
+  background: radial-gradient(720px 340px at 82% -8%, var(--brand-veil), transparent 72%);
 }
 
 /* 入场揭示：无 JS 时全显，reduced-motion 直接就位 */
@@ -337,6 +362,9 @@ html[data-theme='dark'] pre.astro-code span {
   border-radius: var(--radius-box);
   overflow: hidden;
   background: var(--paper-2);
+  box-shadow:
+    var(--shadow-1),
+    inset 0 1px 0 var(--edge-hi);
 }
 .codeblock pre {
   margin: 0;
@@ -468,6 +496,12 @@ html[data-theme='dark'] pre.astro-code span {
 .docs-body td code {
   white-space: nowrap;
 }
+.docs-body tbody tr {
+  transition: background-color 0.15s ease;
+}
+.docs-body tbody tr:hover td {
+  background: var(--paper-2);
+}
 
 /* ==========================================================================
    复制按钮：三态（待复制 / 已复制 / 失败） */
@@ -481,11 +515,15 @@ html[data-theme='dark'] pre.astro-code span {
   transition:
     opacity 0.18s ease,
     color 0.18s ease,
-    border-color 0.18s ease;
+    border-color 0.18s ease,
+    transform 0.12s ease;
 }
 [data-copy]:hover {
   color: var(--ink);
   border-color: var(--hair-2);
+}
+[data-copy]:active {
+  transform: scale(0.97);
 }
 [data-copy][data-state='done'] {
   color: var(--brand);
@@ -601,6 +639,9 @@ html[data-theme='dark'] [data-copy][data-state='error'] {
     opacity: 1;
     transform: none;
     transition: none;
+  }
+  .lift:hover {
+    transform: none;
   }
   .topbar-progress {
     animation: none;
