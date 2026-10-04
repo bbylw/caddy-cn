@@ -11,8 +11,13 @@ const NAV = [
 ];
 
 const path = Astro.url.pathname.replace(/\/+$/, '') || '/';
-const isActive = (href: string) =>
+const matches = (href: string) =>
   href === '/' ? path === '/' : path === href || path.startsWith(`${href}/`);
+// 前缀会重叠（/docs 与 /docs/quick-starts），只取最长匹配作为唯一当前项。
+const activeHref = NAV.map((n) => n.href)
+  .filter(matches)
+  .sort((a, b) => b.length - a.length)[0];
+const isActive = (href: string) => href === activeHref;
 ---
 
 <header class="sticky top-0 z-40 bg-[var(--paper-veil)] backdrop-blur-md">
@@ -60,6 +65,7 @@ const isActive = (href: string) =>
         type="button"
         data-menu-toggle
         aria-expanded="false"
+        aria-controls="mobile-nav"
         aria-label="打开导航菜单"
         class="grid size-9 place-items-center rounded-ctl border border-hair text-ink-2 transition-colors hover:border-hair-2 hover:text-ink md:hidden"
       >
@@ -68,7 +74,7 @@ const isActive = (href: string) =>
     </div>
   </div>
 
-  <div class="mobile-nav border-t border-hair bg-[var(--paper)] md:hidden">
+  <div id="mobile-nav" class="mobile-nav border-t border-hair bg-[var(--paper)] md:hidden">
     <nav aria-label="移动端导航" class="shell flex flex-col py-2">
       {
         NAV.map((item) => (

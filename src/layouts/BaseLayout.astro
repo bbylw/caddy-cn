@@ -8,10 +8,13 @@ interface Props {
   description: string;
   /** 站内路径，用于 canonical 与 og:url */
   path?: string;
+  /** Open Graph 类型：文档页应传 'article' */
+  ogType?: 'website' | 'article';
 }
 
-const { title, description, path = Astro.url.pathname } = Astro.props;
-const canonical = new URL(path, 'https://caddy.ndjp.net').href;
+const { title, description, path = Astro.url.pathname, ogType = 'website' } = Astro.props;
+const site = Astro.site ?? new URL('https://caddy.ndjp.net');
+const canonical = new URL(path, site).href;
 const fullTitle = path === '/' ? title : `${title} · Caddy 中文站`;
 ---
 
@@ -23,14 +26,15 @@ const fullTitle = path === '/' ? title : `${title} · Caddy 中文站`;
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content={ogType} />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
     <meta property="og:locale" content="zh_CN" />
-    <meta name="twitter:card" content="summary_large_image" />
+    <meta property="og:site_name" content="Caddy 中文站" />
+    <meta name="twitter:card" content="summary" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <meta name="theme-color" content="#0d1116" />
+    <meta name="theme-color" content="#fbfcfd" />
     <link
       rel="preload"
       href="/fonts/geist-geist-latin-wght-normal.woff2"
@@ -57,6 +61,8 @@ const fullTitle = path === '/' ? title : `${title} · Caddy 中文站`;
         }
         document.documentElement.dataset.theme = t;
         document.documentElement.classList.add('js');
+        var tc = document.querySelector('meta[name="theme-color"]');
+        if (tc) tc.setAttribute('content', t === 'dark' ? '#0d1116' : '#fbfcfd');
       })();
     </script>
   </head>

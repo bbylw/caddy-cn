@@ -1,5 +1,7 @@
-import { CheckIcon, CopyIcon, XIcon } from '@phosphor-icons/react';
+import { CheckIcon } from '@phosphor-icons/react';
 import { useState } from 'react';
+import { useTabList } from '../lib/use-tablist';
+import { CopyButton } from './CopyButton';
 
 export interface ScenarioView {
   id: string;
@@ -22,9 +24,12 @@ const TABS: Array<[Tab, string]> = [
 export default function Workbench({ scenarios }: { scenarios: ScenarioView[] }) {
   const [active, setActive] = useState(0);
   const [tab, setTab] = useState<Tab>('caddyfile');
-  const current = scenarios[active]!;
+  const list = useTabList(scenarios.length, active, setActive);
+  const current = scenarios[active] ?? scenarios[0];
+  if (!current) return null;
   const raw = tab === 'caddyfile' ? current.caddyfile : current.json;
   const html = tab === 'caddyfile' ? current.caddyfileHtml : current.jsonHtml;
+  const panelId = 'workbench-panel';
 
   return (
     <div
@@ -36,13 +41,18 @@ export default function Workbench({ scenarios }: { scenarios: ScenarioView[] }) 
         className="-mx-5 flex snap-x snap-mandatory gap-2 overflow-x-auto px-5 pb-1 lg:mx-0 lg:flex-col lg:overflow-visible lg:px-0"
         role="tablist"
         aria-label="配置场景"
+        onKeyDown={list.onKeyDown}
       >
         {scenarios.map((s, i) => (
           <button
             key={s.id}
+            ref={list.setTabRef(i)}
             type="button"
             role="tab"
+            id={`workbench-tab-${s.id}`}
             aria-selected={i === active}
+            aria-controls={panelId}
+            tabIndex={list.tabIndex(i)}
             onClick={() => setActive(i)}
             className={[
               'shrink-0 snap-start rounded-ctl border px-3.5 py-2.5 text-left transition-colors lg:w-full lg:rounded-none lg:border-0 lg:border-l-2 lg:px-4 lg:py-3',
@@ -66,7 +76,13 @@ export default function Workbench({ scenarios }: { scenarios: ScenarioView[] }) 
         ))}
       </div>
 
-      <div className="min-w-0">
+      <div
+        className="min-w-0"
+        role="tabpanel"
+        id={panelId}
+        aria-labelledby={`workbench-tab-${current.id}`}
+        tabIndex={0}
+      >
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
           <div className="flex gap-1 rounded-ctl border border-hair bg-[var(--paper-2)] p-1">
             {TABS.map(([id, label]) => (
@@ -86,23 +102,12 @@ export default function Workbench({ scenarios }: { scenarios: ScenarioView[] }) 
               </button>
             ))}
           </div>
-          <button
-            type="button"
-            data-copy={raw}
-            data-state="idle"
-            aria-label="复制当前配置"
+          <CopyButton
+            copy={raw}
+            ariaLabel="复制当前配置"
+            size={13}
             className="inline-flex h-8 items-center gap-1.5 rounded-ctl px-2.5 text-[12px]"
-          >
-            <span className="c-copy inline-flex items-center gap-1.5">
-              <CopyIcon size={13} /> 复制
-            </span>
-            <span className="c-check inline-flex items-center gap-1.5">
-              <CheckIcon size={13} /> 已复制
-            </span>
-            <span className="c-x inline-flex items-center gap-1.5">
-              <XIcon size={13} /> 失败
-            </span>
-          </button>
+          />
         </div>
 
         <div className="codeblock codeblock--tight">

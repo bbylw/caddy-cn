@@ -93,8 +93,16 @@ type Phase = 'idle' | 'armed' | 'running';
 export default function ProtocolTimeline() {
   const reduce = usePrefersReducedMotion();
   const hostRef = useRef<HTMLDivElement>(null);
+  const replayTimer = useRef<number | null>(null);
   const [phase, setPhase] = useState<Phase>('idle');
   const [runId, setRunId] = useState(0);
+
+  useEffect(
+    () => () => {
+      if (replayTimer.current !== null) window.clearTimeout(replayTimer.current);
+    },
+    [],
+  );
 
   useEffect(() => {
     if (reduce) {
@@ -123,7 +131,8 @@ export default function ProtocolTimeline() {
 
   const replay = useCallback(() => {
     setPhase('armed');
-    window.setTimeout(() => setRunId((n) => n + 1), 30);
+    if (replayTimer.current !== null) window.clearTimeout(replayTimer.current);
+    replayTimer.current = window.setTimeout(() => setRunId((n) => n + 1), 30);
   }, []);
 
   return (
@@ -191,8 +200,8 @@ export default function ProtocolTimeline() {
                     ) : null}
                     {p.perLane?.includes(i) ? (
                       <span
-                        className="absolute inset-y-0 left-0 block w-[19.4%] rounded-[2px] bg-[var(--hair-2)]"
-                        style={{ left: '0%' }}
+                        className="absolute inset-y-0 left-0 block rounded-[2px] bg-[var(--hair-2)]"
+                        style={{ left: '0%', width: pct(s.s) }}
                         title="TCP + TLS 握手"
                       />
                     ) : null}

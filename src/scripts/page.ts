@@ -1,28 +1,11 @@
-/* 全站客户端脚本：主题切换、入场揭示、代码复制、顶栏菜单。 */
+/* 全站客户端脚本：入场揭示、代码复制、顶栏菜单。 */
 
-const THEME_KEY = 'caddy-theme';
+export {};
 
 declare global {
   interface Window {
     __caddyPage?: boolean;
   }
-}
-
-function currentTheme(): 'light' | 'dark' {
-  return document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
-}
-
-export function applyTheme(next: 'light' | 'dark') {
-  document.documentElement.dataset.theme = next;
-  try {
-    localStorage.setItem(THEME_KEY, next);
-  } catch {
-    /* 隐私模式下忽略 */
-  }
-}
-
-export function toggleTheme() {
-  applyTheme(currentTheme() === 'dark' ? 'light' : 'dark');
 }
 
 /* ---------- 入场揭示 ---------- */
@@ -57,13 +40,8 @@ function setupCopy() {
     );
     if (!btn) return;
 
-    const raw = btn.dataset.copy ?? '';
-    const text = raw
-      .replace(/&quot;/g, '"')
-      .replace(/&#39;/g, "'")
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .replace(/&amp;/g, '&');
+    // dataset.copy 返回的已是解码后的文本，切勿再手工反转义。
+    const text = btn.dataset.copy ?? '';
 
     const done = () => {
       btn.dataset.state = 'done';
@@ -83,12 +61,28 @@ function setupCopy() {
 
 /* ---------- 移动端菜单 ---------- */
 function setupMenu() {
-  document.addEventListener('click', (event) => {
-    const el = (event.target as HTMLElement | null)?.closest<HTMLElement>('[data-menu-toggle]');
-    if (!el) return;
-    const open = document.documentElement.dataset.menu === 'open';
-    document.documentElement.dataset.menu = open ? 'closed' : 'open';
-    el.setAttribute('aria-expanded', String(!open));
+  const toggle = document.querySelector<HTMLButtonElement>('[data-menu-toggle]');
+  const panel = document.getElementById('mobile-nav');
+  if (!toggle || !panel) return;
+
+  const setOpen = (open: boolean) => {
+    document.documentElement.dataset.menu = open ? 'open' : 'closed';
+    toggle.setAttribute('aria-expanded', String(open));
+    if (open) {
+      panel.querySelector<HTMLElement>('a,button')?.focus();
+    } else {
+      toggle.focus();
+    }
+  };
+
+  toggle.addEventListener('click', () => {
+    setOpen(document.documentElement.dataset.menu !== 'open');
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && document.documentElement.dataset.menu === 'open') {
+      setOpen(false);
+    }
   });
 }
 
@@ -97,13 +91,4 @@ if (!window.__caddyPage) {
   setupReveal();
   setupCopy();
   setupMenu();
-
-  document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && document.documentElement.dataset.menu === 'open') {
-      document.documentElement.dataset.menu = 'closed';
-      document
-        .querySelector('[data-menu-toggle]')
-        ?.setAttribute('aria-expanded', 'false');
-    }
-  });
 }

@@ -1,4 +1,5 @@
 const THEME_KEY = 'caddy-theme';
+const THEME_COLOR: Record<Theme, string> = { light: '#fbfcfd', dark: '#0d1116' };
 
 export type Theme = 'light' | 'dark';
 
@@ -8,6 +9,9 @@ export function readTheme(): Theme {
 
 export function applyTheme(next: Theme) {
   document.documentElement.dataset.theme = next;
+  document
+    .querySelector('meta[name="theme-color"]')
+    ?.setAttribute('content', THEME_COLOR[next]);
   try {
     localStorage.setItem(THEME_KEY, next);
   } catch {

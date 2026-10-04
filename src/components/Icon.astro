@@ -15,7 +15,9 @@ import {
   SunIcon,
   TerminalIcon,
   XIcon,
+  type IconProps,
 } from '@phosphor-icons/react';
+import type { ComponentType } from 'react';
 
 export type IconName =
   | 'arrow-right'
@@ -34,7 +36,7 @@ export type IconName =
   | 'terminal'
   | 'x';
 
-const MAP: Record<IconName, unknown> = {
+const MAP: Record<IconName, ComponentType<IconProps>> = {
   'arrow-right': ArrowRightIcon,
   'arrow-out': ArrowSquareOutIcon,
   book: BookOpenIcon,
@@ -59,7 +61,7 @@ interface Props {
 }
 
 const { name, size = 18, class: cls } = Astro.props;
-const Cmp = MAP[name] as unknown as (p: Record<string, unknown>) => unknown;
+const Cmp = MAP[name];
 ---
 
 <Cmp size={size} weight="regular" className={cls} aria-hidden="true" />

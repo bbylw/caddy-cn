@@ -40,23 +40,24 @@ const PROTOCOLS = ['HTTP/1.1', 'HTTP/2', 'HTTP/3'];
 export default function BootSequence() {
   const reduce = usePrefersReducedMotion();
   const hostRef = useRef<HTMLDivElement>(null);
+  const timerRef = useRef<number | null>(null);
   const [shown, setShown] = useState(reduce ? LINES.length : 0);
   const [runId, setRunId] = useState(0);
-  const started = useRef(false);
 
   useEffect(() => {
+    if (timerRef.current !== null) {
+      window.clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+
     if (reduce) {
       setShown(LINES.length);
       return;
     }
-    setShown(0);
-    started.current = false;
-  }, [reduce, runId]);
 
-  useEffect(() => {
-    if (reduce) return;
+    setShown(0);
     const host = hostRef.current;
-    if (!host || started.current) return;
+    if (!host) return;
 
     if (!('IntersectionObserver' in window)) {
       setShown(LINES.length);
@@ -68,19 +69,28 @@ export default function BootSequence() {
         for (const entry of entries) {
           if (!entry.isIntersecting) continue;
           io.disconnect();
-          started.current = true;
           let i = 0;
-          const timer = window.setInterval(() => {
+          timerRef.current = window.setInterval(() => {
             i += 1;
             setShown(i);
-            if (i >= LINES.length) window.clearInterval(timer);
+            if (i >= LINES.length && timerRef.current !== null) {
+              window.clearInterval(timerRef.current);
+              timerRef.current = null;
+            }
           }, 220);
         }
       },
       { threshold: 0.25 },
     );
     io.observe(host);
-    return () => io.disconnect();
+
+    return () => {
+      io.disconnect();
+      if (timerRef.current !== null) {
+        window.clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
   }, [reduce, runId]);
 
   const replay = useCallback(() => setRunId((n) => n + 1), []);
@@ -106,7 +116,12 @@ export default function BootSequence() {
       </div>
 
       <div className="px-4 py-3">
-        <ol className="flex flex-col gap-1">
+        <ol
+          className="flex flex-col gap-1"
+          aria-live="polite"
+          aria-relevant="additions"
+          aria-label="Caddy 启动日志"
+        >
           {LINES.slice(0, shown).map((line, i) => (
             <li
               key={`${runId}-${line.ts}-${i}`}
@@ -123,7 +138,7 @@ export default function BootSequence() {
             </li>
           ))}
           {!done ? (
-            <li className="font-mono text-[11.5px] text-ink-3">
+            <li className="font-mono text-[11.5px] text-ink-3" aria-hidden="true">
               <span className="boot-caret">▍</span>
             </li>
           ) : null}

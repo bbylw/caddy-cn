@@ -15,7 +15,7 @@ const { page, prev, next } = found;
 const path = `/docs/${slug}`;
 ---
 
-<BaseLayout title={page.title} description={page.lede} path={path}>
+<BaseLayout title={page.title} description={page.lede} path={path} ogType="article">
   <div class="shell grid gap-10 py-10 md:py-14 lg:grid-cols-[196px_minmax(0,1fr)] lg:gap-14">
     <aside
       class="min-w-0 lg:sticky lg:top-24 lg:self-start"

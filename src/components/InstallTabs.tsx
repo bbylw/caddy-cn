@@ -1,5 +1,6 @@
-import { CheckIcon, CopyIcon, XIcon } from '@phosphor-icons/react';
 import { useState } from 'react';
+import { useTabList } from '../lib/use-tablist';
+import { CopyButton } from './CopyButton';
 
 export interface InstallerView {
   id: string;
@@ -11,7 +12,10 @@ export interface InstallerView {
 
 export default function InstallTabs({ installers }: { installers: InstallerView[] }) {
   const [active, setActive] = useState(0);
-  const current = installers[active]!;
+  const list = useTabList(installers.length, active, setActive);
+  const current = installers[active] ?? installers[0];
+  if (!current) return null;
+  const panelId = 'install-panel';
 
   return (
     <div id="install">
@@ -19,13 +23,18 @@ export default function InstallTabs({ installers }: { installers: InstallerView[
         className="-mx-5 flex snap-x snap-mandatory gap-1.5 overflow-x-auto px-5 pb-1 md:mx-0 md:flex-wrap md:overflow-visible md:px-0"
         role="tablist"
         aria-label="安装方式"
+        onKeyDown={list.onKeyDown}
       >
         {installers.map((item, i) => (
           <button
             key={item.id}
+            ref={list.setTabRef(i)}
             type="button"
             role="tab"
+            id={`install-tab-${item.id}`}
             aria-selected={i === active}
+            aria-controls={panelId}
+            tabIndex={list.tabIndex(i)}
             onClick={() => setActive(i)}
             className={[
               'shrink-0 snap-start rounded-pill border px-3.5 py-1.5 text-[13px] transition-colors',
@@ -39,7 +48,13 @@ export default function InstallTabs({ installers }: { installers: InstallerView[
         ))}
       </div>
 
-      <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_260px]">
+      <div
+        className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_260px]"
+        role="tabpanel"
+        id={panelId}
+        aria-labelledby={`install-tab-${current.id}`}
+        tabIndex={0}
+      >
         <div className="codeblock codeblock--tight">
           <div
             key={current.id}
@@ -51,23 +66,13 @@ export default function InstallTabs({ installers }: { installers: InstallerView[
           <p className="border-t border-hair pt-3 text-[13.5px] leading-relaxed text-ink-2">
             {current.note}
           </p>
-          <button
-            type="button"
-            data-copy={current.code}
-            data-state="idle"
-            aria-label="复制安装命令"
+          <CopyButton
+            copy={current.code}
+            ariaLabel="复制安装命令"
+            idle="复制命令"
+            size={14}
             className="inline-flex h-9 w-fit items-center gap-1.5 rounded-ctl px-3 text-[12.5px]"
-          >
-            <span className="c-copy inline-flex items-center gap-1.5">
-              <CopyIcon size={14} /> 复制命令
-            </span>
-            <span className="c-check inline-flex items-center gap-1.5">
-              <CheckIcon size={14} /> 已复制
-            </span>
-            <span className="c-x inline-flex items-center gap-1.5">
-              <XIcon size={14} /> 失败
-            </span>
-          </button>
+          />
         </div>
       </div>
     </div>
