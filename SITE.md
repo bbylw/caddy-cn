@@ -15,6 +15,7 @@ Caddy 官方文档的中文整理站。**根目录 `README.md` 是 Caddy 官方 
 ```bash
 bun install          # 安装依赖
 bun run fonts        # 把 @fontsource-variable 的 woff2 复制到 public/fonts
+bun run icons        # 由 public/favicon*.svg 光栅化 PNG 图标集到 public/icons
 bun run dev          # 开发
 bun run build        # 构建到 dist/
 bunx astro check     # 类型与诊断
@@ -30,6 +31,7 @@ node scripts/shot.mjs <path> <name>   # 截图，输出到 .shots/
 - 圆角：容器 `--radius-box` 12px，控件 `--radius-ctl` 8px，徽标全圆。
 - 分节用发丝线 `.band`；眉题 / 标注统一 `.mono`（Geist Mono，大写 + 字距）。
 - 字体自托管在 `public/fonts`（Geist / Geist Mono，latin + latin-ext 子集），中文回落系统字体栈，禁止引入 CDN。
+- 图标：`public/favicon.svg` 主题自适应（亮暗各用一组令牌色），PNG 集 / apple-touch / maskable 由 `bun run icons` 光栅化到 `public/icons` 并提交；改 SVG 后需重跑。
 - 全站禁止 em dash / en dash，全角标点后不能断行（模板里的换行会渲染成空格）。
 
 ### 代码高亮

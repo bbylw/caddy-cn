@@ -1,10 +1,28 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Caddy">
-  <rect width="32" height="32" rx="7" fill="#0d1116" />
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Caddy 中文站">
+  <style>
+    .tile { fill: #167c48; }
+    .glyph { stroke: #f6fbf8; }
+    .dot { fill: #f6fbf8; }
+    @media (prefers-color-scheme: dark) {
+      .tile { fill: #4cc38a; }
+      .glyph { stroke: #0d1116; }
+      .dot { fill: #0d1116; }
+    }
+  </style>
+  <defs>
+    <linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.14" />
+      <stop offset="0.55" stop-color="#ffffff" stop-opacity="0" />
+    </linearGradient>
+  </defs>
+  <rect class="tile" width="64" height="64" rx="14" />
+  <rect width="64" height="64" rx="14" fill="url(#sheen)" />
   <path
-    d="M21.5 11a7.25 7.25 0 1 0 0 10"
+    class="glyph"
+    d="M42.64 20.51 A15 15 0 1 0 42.64 43.49"
     fill="none"
-    stroke="#4cc38a"
-    stroke-width="3.2"
+    stroke-width="9.5"
     stroke-linecap="round"
   />
+  <circle class="dot" cx="45.5" cy="32" r="4.2" />
 </svg>
