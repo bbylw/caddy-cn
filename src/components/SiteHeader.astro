@@ -1,0 +1,90 @@
+---
+import Icon from './Icon.astro';
+import ThemeToggle from './ThemeToggle.tsx';
+
+const NAV = [
+  { href: '/', label: '首页' },
+  { href: '/docs', label: '文档' },
+  { href: '/docs/quick-starts', label: '快速上手' },
+  { href: '/docs/features', label: '特性' },
+  { href: '/about', label: '关于' },
+];
+
+const path = Astro.url.pathname.replace(/\/+$/, '') || '/';
+const isActive = (href: string) =>
+  href === '/' ? path === '/' : path === href || path.startsWith(`${href}/`);
+---
+
+<header class="sticky top-0 z-40 bg-[var(--paper-veil)] backdrop-blur-md">
+  <div class="shell flex h-16 items-center justify-between gap-6">
+    <a
+      href="/"
+      class="flex shrink-0 items-baseline gap-2 rounded-ctl"
+      aria-label="Caddy 中文站首页"
+    >
+      <span class="text-[15px] font-semibold tracking-[-0.03em]">Caddy</span>
+      <span class="mono !tracking-[0.14em]">中文站</span>
+    </a>
+
+    <nav aria-label="主导航" class="hidden items-center gap-7 md:flex">
+      {
+        NAV.map((item) => (
+          <a
+            href={item.href}
+            aria-current={isActive(item.href) ? 'page' : undefined}
+            class:list={[
+              'text-[13.5px] transition-colors',
+              isActive(item.href)
+                ? 'text-brand'
+                : 'text-ink-2 hover:text-ink',
+            ]}
+          >
+            {item.label}
+          </a>
+        ))
+      }
+    </nav>
+
+    <div class="flex shrink-0 items-center gap-2">
+      <ThemeToggle client:load />
+      <a
+        href="https://github.com/caddyserver/caddy"
+        target="_blank"
+        rel="noreferrer"
+        aria-label="Caddy 源码仓库"
+        class="hidden size-9 place-items-center rounded-ctl border border-hair text-ink-2 transition-colors hover:border-hair-2 hover:text-ink sm:grid"
+      >
+        <Icon name="github" size={16} />
+      </a>
+      <button
+        type="button"
+        data-menu-toggle
+        aria-expanded="false"
+        aria-label="打开导航菜单"
+        class="grid size-9 place-items-center rounded-ctl border border-hair text-ink-2 transition-colors hover:border-hair-2 hover:text-ink md:hidden"
+      >
+        <Icon name="list" size={16} />
+      </button>
+    </div>
+  </div>
+
+  <div class="mobile-nav border-t border-hair bg-[var(--paper)] md:hidden">
+    <nav aria-label="移动端导航" class="shell flex flex-col py-2">
+      {
+        NAV.map((item) => (
+          <a
+            href={item.href}
+            class:list={[
+              'border-b border-hair py-3 text-[14px] last:border-0',
+              isActive(item.href) ? 'text-brand' : 'text-ink-2',
+            ]}
+          >
+            {item.label}
+          </a>
+        ))
+      }
+    </nav>
+  </div>
+
+  <div class="topbar-progress h-[2px] origin-left bg-brand" aria-hidden="true"></div>
+</header>

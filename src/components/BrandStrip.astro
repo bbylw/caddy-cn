@@ -1,0 +1,43 @@
+---
+import { siCloudsmith, siDocker, siGo, siLetsencrypt, siTailscale } from 'simple-icons';
+
+interface Brand {
+  path: string;
+  title: string;
+  href: string;
+}
+
+const BRANDS: Brand[] = [
+  { path: siGo.path, title: 'Go', href: 'https://go.dev' },
+  { path: siLetsencrypt.path, title: "Let's Encrypt", href: 'https://letsencrypt.org' },
+  { path: siTailscale.path, title: 'Tailscale', href: 'https://tailscale.com' },
+  { path: siCloudsmith.path, title: 'Cloudsmith', href: 'https://cloudsmith.com' },
+  { path: siDocker.path, title: 'Docker', href: 'https://www.docker.com' },
+];
+---
+
+<ul class="flex flex-wrap items-center gap-x-9 gap-y-4">
+  {
+    BRANDS.map((brand) => (
+      <li>
+        <a
+          href={brand.href}
+          target="_blank"
+          rel="noreferrer"
+          class="inline-flex items-center text-ink-3 opacity-80 transition-opacity hover:text-ink-2 hover:opacity-100"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            width="22"
+            height="22"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path d={brand.path} />
+          </svg>
+          <span class="sr-only">{brand.title}</span>
+        </a>
+      </li>
+    ))
+  }
+</ul>

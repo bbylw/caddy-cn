@@ -1,0 +1,79 @@
+---
+import CodeBlock from '../../components/CodeBlock.astro';
+import Note from '../../components/Note.astro';
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+
+<DocsLayout slug="command-line">
+  <p>
+    不带子命令的 <code>caddy</code> 会打印帮助。下面是常用的子命令，多数都能在
+    <code>--help</code> 里看到完整说明。
+  </p>
+
+  <h2>运行与配置</h2>
+  <table>
+    <thead>
+      <tr><th>命令</th><th>作用</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>caddy run</code></td><td>前台运行，阻塞直到进程结束</td></tr>
+      <tr><td><code>caddy start</code></td><td>后台运行</td></tr>
+      <tr><td><code>caddy stop</code></td><td>优雅停止后台实例</td></tr>
+      <tr><td><code>caddy reload</code></td><td>零停机替换配置</td></tr>
+      <tr><td><code>caddy adapt</code></td><td>把配置适配成 JSON</td></tr>
+      <tr><td><code>caddy validate</code></td><td>校验配置而不运行</td></tr>
+      <tr><td><code>caddy fmt</code></td><td>格式化 Caddyfile</td></tr>
+      <tr><td><code>caddy environ</code></td><td>打印 Caddy 能看到的环境变量</td></tr>
+    </tbody>
+  </table>
+
+  <h2>证书与 PKI</h2>
+  <table>
+    <thead>
+      <tr><th>命令</th><th>作用</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>caddy trust</code></td><td>把本地 CA 根证书装进系统信任库</td></tr>
+      <tr><td><code>caddy untrust</code></td><td>从信任库移除本地 CA 根证书</td></tr>
+    </tbody>
+  </table>
+
+  <h2>开箱即用的子命令</h2>
+  <p>
+    这两个子命令不需要写配置文件，适合快速验证一个想法：
+  </p>
+  <CodeBlock
+    code={`# 把当前目录以文件服务器形式跑起来
+caddy file-server --listen :9000 --browse
+
+# 一个指向后端的 HTTPS 反向代理
+caddy reverse-proxy --from example.com --to 127.0.0.1:9000`}
+    lang="bash"
+    label="终端"
+  />
+
+  <h2>格式化</h2>
+  <p>Caddyfile 有官方推荐的排版，<code>fmt</code> 会直接改写文件：</p>
+  <CodeBlock code={`caddy fmt --overwrite Caddyfile`} lang="bash" label="终端" />
+  <p>把它放进 CI 或者 pre-commit 钩子里，配置的风格就不需要人操心。</p>
+
+  <h2>常用参数</h2>
+  <table>
+    <thead>
+      <tr><th>参数</th><th>说明</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>--config</code></td><td>配置文件路径</td></tr>
+      <tr><td><code>--adapter</code></td><td>配置适配器名称</td></tr>
+      <tr><td><code>--resume</code></td><td>恢复上一次加载过的配置</td></tr>
+      <tr><td><code>--pretty</code></td><td>让 JSON 输出带缩进</td></tr>
+      <tr><td><code>--overwrite</code></td><td>配合 fmt 直接改写文件</td></tr>
+      <tr><td><code>--domain</code></td><td>file-server 使用的域名</td></tr>
+      <tr><td><code>--from</code> / <code>--to</code></td><td>reverse-proxy 的两端</td></tr>
+    </tbody>
+  </table>
+
+  <Note title=" reload 与 stop 的区别">
+    <code>reload</code> 只替换配置，连接不断；<code>stop</code> 会让服务器下线。改配置永远用前者。
+  </Note>
+</DocsLayout>

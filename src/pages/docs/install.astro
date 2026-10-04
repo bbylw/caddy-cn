@@ -1,0 +1,141 @@
+---
+import CodeBlock from '../../components/CodeBlock.astro';
+import Note from '../../components/Note.astro';
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+
+<DocsLayout slug="install">
+  <p>
+    最简单的跨平台上手方式，是从 <a
+      href="https://github.com/caddyserver/caddy/releases"
+      target="_blank"
+      rel="noreferrer">GitHub Releases</a
+    >
+    下载可执行文件，放进 PATH。生产环境则更推荐用下面列出的发行版官方包。
+  </p>
+
+  <h2>静态二进制</h2>
+  <ol>
+    <li>
+      获取一个 Caddy 二进制：从
+      <a href="https://github.com/caddyserver/caddy/releases" target="_blank" rel="noreferrer"
+        >GitHub Releases</a
+      >（展开 Assets）、<a href="https://caddyserver.com/download" target="_blank" rel="noreferrer"
+        >官方下载页</a
+      >，或者<a href="#xcaddy">自己从源码构建</a>。
+    </li>
+    <li>
+      把它放进 PATH 目录，这样就能直接敲 <code>caddy</code> 而不用写完整路径（用
+      <code>echo $PATH</code> 看看有哪些目录符合条件）。
+    </li>
+    <li>
+      把 Caddy 装成系统服务，这一步强烈推荐，尤其是生产服务器。
+    </li>
+  </ol>
+  <p>
+    升级静态二进制只需要用新版本替换旧文件然后重启。<a
+      href="/docs/command-line"
+      >caddy upgrade</a
+    > 命令可以把这件事做得更省事。
+  </p>
+
+  <h2>Debian、Ubuntu、Raspbian</h2>
+  <p>
+    安装这个包会自动把 Caddy 以名为 <code>caddy</code> 的 systemd 服务启动运行。包里还带一个可选的
+    <code>caddy-api</code> 服务，默认未启用；如果你主要靠 API 而不是配置文件来管理 Caddy，应该启用它。
+  </p>
+  <CodeBlock
+    code={`sudo apt install -y debian-keyring debian-archive-keyring apt-transport-https curl
+curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' \\
+  | sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' \\
+  | sudo tee /etc/apt/sources.list.d/caddy-stable.list
+sudo chmod o+r /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+sudo chmod o+r /etc/apt/sources.list.d/caddy-stable.list
+sudo apt update
+sudo apt install caddy`}
+    lang="bash"
+    label="稳定版"
+  />
+  <Note title="测试版">
+    想要 beta 与 RC 版本，把上面命令里的
+    <code>stable</code> 全部换成 <code>testing</code> 即可，仓库由
+    <a href="https://cloudsmith.io/~caddy/repos/" target="_blank" rel="noreferrer">Cloudsmith</a
+    > 托管。
+  </Note>
+
+  <h2>Fedora、RedHat、CentOS</h2>
+  <p>这个包同时带了两份 systemd 单元文件，但默认不会启用。推荐启用服务来运行。</p>
+  <CodeBlock
+    code={`# Fedora
+sudo dnf install dnf5-plugins
+sudo dnf copr enable @caddy/caddy
+sudo dnf install caddy
+
+# CentOS / RHEL
+sudo dnf install dnf-plugins-core
+sudo dnf copr enable @caddy/caddy
+sudo dnf install caddy`}
+    lang="bash"
+    label="COPR"
+  />
+
+  <h2>Arch Linux、Manjaro</h2>
+  <CodeBlock code={`sudo pacman -Syu caddy`} lang="bash" label="pacman" />
+  <p>
+    这个包对两份 systemd 单元文件做了大量修改，包括自定义的启停行为和额外的沙箱标志，某些宿主目录可能因此对
+    Caddy 进程不可见。详见 Arch Linux Wiki。
+  </p>
+
+  <h2>Docker</h2>
+  <CodeBlock code={`docker pull caddy`} lang="bash" label="Docker Hub" />
+  <p>
+    官方推荐用 Docker Compose 跑，写法见<a href="/docs/running">运行与守护</a>一篇。记得把
+    <code>/data</code> 挂出来做持久化，否则证书会被反复签发。
+  </p>
+
+  <h2 id="xcaddy">从源码构建</h2>
+  <p>需要 Go 1.26.0 或更高版本。</p>
+  <CodeBlock
+    code={`git clone "https://github.com/caddyserver/caddy.git"
+cd caddy/cmd/caddy/
+go build`}
+    lang="bash"
+    label="go build"
+  />
+  <p>
+    注意：这样构建不会嵌入正确的版本信息。要带版本信息或第三方插件，请用
+    <a href="https://github.com/caddyserver/xcaddy" target="_blank" rel="noreferrer">xcaddy</a>：
+  </p>
+  <CodeBlock
+    code={`xcaddy build v2.10.0 \\
+  --with github.com/caddy-dns/cloudflare \\
+  --with github.com/mholt/caddy-l4`}
+    lang="bash"
+    label="xcaddy"
+  />
+
+  <h2>社区维护的安装方式</h2>
+  <p>以下方式由社区维护，Caddy 团队不直接负责它们的更新。</p>
+  <table>
+    <thead>
+      <tr><th>平台</th><th>命令</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>macOS</td><td><code>brew install caddy</code></td></tr>
+      <tr><td>Windows</td><td><code>choco install caddy</code> 或 <code>scoop install caddy</code></td></tr>
+      <tr><td>Gentoo</td><td><code>emerge www-servers/caddy</code></td></tr>
+      <tr><td>Termux</td><td><code>pkg install caddy</code></td></tr>
+      <tr><td>NixOS</td><td>包 <code>caddy</code>，模块 <code>services.caddy</code></td></tr>
+      <tr><td>Ansible</td><td><code>ansible-galaxy install nvjacobo.caddy</code></td></tr>
+      <tr><td>Webi</td><td><code>curl -sS https://webi.sh/caddy | sh</code></td></tr>
+    </tbody>
+  </table>
+
+  <Note kind="warn" title="插件从哪来">
+    官方包只包含标准模块。需要第三方插件时，用 <code>xcaddy</code>
+    从源码构建，或到<a href="https://caddyserver.com/download" target="_blank" rel="noreferrer"
+      >官方下载页</a
+    >勾选你需要的模块生成自定义构建。
+  </Note>
+</DocsLayout>

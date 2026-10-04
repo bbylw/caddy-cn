@@ -1,0 +1,84 @@
+---
+import CodeBlock from '../../components/CodeBlock.astro';
+import Note from '../../components/Note.astro';
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+
+<DocsLayout slug="config-adapters">
+  <p>
+    配置适配器把你选的任何格式转成 Caddy 的原生 JSON。Caddy 自己就带一个 Caddyfile
+    适配器，社区还提供了其他几种。
+  </p>
+
+  <h2>使用</h2>
+  <CodeBlock
+    code={`# 输出到标准输出
+caddy adapt --config Caddyfile
+
+# 指定格式与输出文件
+caddy adapt --config nginx.conf --adapter nginx --pretty > caddy.json
+
+# 校验而不运行
+caddy validate --config caddy.json`}
+    lang="bash"
+    label="终端"
+  />
+
+  <h2>内置的 Caddyfile 适配器</h2>
+  <p>如果当前目录有一个名为 <code>Caddyfile</code> 的文件，并且没有另外指定配置，<code>caddy run</code> 会自动完成适配并运行：</p>
+  <CodeBlock
+    code={`:2015
+respond "Hello, world!"`}
+    lang="caddyfile"
+    label="Caddyfile"
+  />
+  <p>它对应的 JSON 是：</p>
+  <CodeBlock
+    code={`{
+	"apps": {
+		"http": {
+			"servers": {
+				"srv0": {
+					"listen": [":2015"],
+					"routes": [
+						{
+							"handle": [
+								{
+									"handler": "static_response",
+									"body": "Hello, world!"
+								}
+							]
+						}
+					]
+				}
+			}
+		}
+	}
+}`}
+    lang="json"
+    label="caddy adapt"
+  />
+
+  <h2>其他适配器</h2>
+  <table>
+    <thead>
+      <tr><th>适配器</th><th>说明</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>caddyfile</code></td><td>内置，本站主要介绍的写法</td></tr>
+      <tr><td><code>json5</code> / <code>jsonc</code></td><td>带注释或宽松语法的 JSON 变体</td></tr>
+      <tr><td><code>yaml</code></td><td>YAML</td></tr>
+      <tr><td><code>toml</code></td><td>TOML</td></tr>
+      <tr><td><code>nginx</code></td><td>转换常见的 nginx 配置</td></tr>
+    </tbody>
+  </table>
+  <p>
+    适配器是可插拔的模块，装了对应的插件之后，<code>--adapter</code> 就能认出新的格式。
+  </p>
+
+  <Note kind="warn" title="适配器的能力边界">
+    走配置适配器时，唯一可用的管理端点是 <code>/load</code>：适配发生在配置加载时，Caddy
+    内部只认 JSON，所以无法对一份 YAML 或 Caddyfile 做<b>部分</b>修改。需要精细控制时请直接用
+    JSON。
+  </Note>
+</DocsLayout>

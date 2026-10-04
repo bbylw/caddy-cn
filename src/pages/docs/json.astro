@@ -1,0 +1,122 @@
+---
+import CodeBlock from '../../components/CodeBlock.astro';
+import Note from '../../components/Note.astro';
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+
+<DocsLayout slug="json">
+  <p>
+    JSON 是 Caddy 的原生配置语言。它表达能力完整、容易由程序生成、支持配置遍历，也兼容所有
+    API 端点。Caddyfile 只是它的一种更顺手的外衣。
+  </p>
+
+  <h2>顶层结构</h2>
+  <CodeBlock
+    code={`{
+	"admin": {},
+	"logging": {},
+	"storage": {},
+	"apps": {
+		"http": {},
+		"tls": {},
+		"pki": {}
+	}
+}`}
+    lang="json"
+    label="caddy.json"
+  />
+  <ul>
+    <li><code>admin</code> 配置管理端点的监听地址与权限</li>
+    <li><code>logging</code> 配置日志的输出、格式与级别</li>
+    <li><code>storage</code> 选择证书与资产的存储介质</li>
+    <li><code>apps</code> 是真正的应用，每一个都是一组长期运行的模块</li>
+  </ul>
+  <p>
+    标准发行版自带 <code>tls</code> 与 <code>http</code> 两个应用，其余的随插件进入配置。
+  </p>
+
+  <h2>HTTP 应用</h2>
+  <p>
+    HTTP 应用按「服务器 / 路由 / 匹配器 / 处理器」组织。一份能跑的完整示例如下：
+  </p>
+  <CodeBlock
+    code={`{
+	"apps": {
+		"http": {
+			"servers": {
+				"srv0": {
+					"listen": [":443"],
+					"routes": [
+						{
+							"match": [{ "host": ["example.com"] }],
+							"handle": [
+								{ "handler": "vars", "root": "/var/www" },
+								{ "handler": "file_server" }
+							],
+							"terminal": true
+						}
+					],
+					"automatic_https": {
+						"disable_redirects": false
+					}
+				}
+			}
+		},
+		"tls": {
+			"automation": {
+				"policies": [{ "subjects": ["example.com"] }]
+			}
+		}
+	}
+}`}
+    lang="json"
+    label="最小可用配置"
+  />
+  <ul>
+    <li>
+      <code>servers</code> 的每个键是一台服务器，<code>listen</code> 是监听地址数组
+    </li>
+    <li>
+      <code>routes</code> 按顺序求值，<code>match</code> 为空表示匹配所有请求
+    </li>
+    <li>
+      <code>handle</code> 是一组处理器，按序执行；<code>terminal</code>
+      表示匹配后不再向后走
+    </li>
+    <li>
+      证书的自动化策略独立在 <code>tls</code> 应用里，通过 <code>subjects</code> 关联域名
+    </li>
+  </ul>
+
+  <h2>处理器与匹配器都是模块</h2>
+  <p>
+    每个处理器对象里的 <code>handler</code> 字段就是一个模块名，例如
+    <code>file_server</code>、<code>reverse_proxy</code>、<code>static_response</code>。匹配器同理，写在
+    <code>match</code> 数组里：
+  </p>
+  <CodeBlock
+    code={`{
+	"match": [
+		{
+			"host": ["example.com"],
+			"path": ["/api/*"],
+			"method": ["POST", "PUT"]
+		}
+	]
+}`}
+    lang="json"
+    label="组合匹配器"
+  />
+  <p>多个匹配器对象之间是与的关系，对象内部各字段之间也是与的关系。</p>
+
+  <h2>文档是自动生成的</h2>
+  <p>
+    JSON 配置的参考文档由模块的元数据自动生成，因此它与实际行为保持一致。每个模块的文档页都能从
+    <a href="/docs/modules">模块索引</a> 一路点进去，字段含义、默认值、与其他模块的关系都在那里。
+  </p>
+
+  <Note title="什么时候必须用 JSON">
+    需要配置遍历、需要只改一部分配置、需要导出当前运行中的配置，或者用到了
+    Caddyfile 没有覆盖的功能时，就用 JSON。
+  </Note>
+</DocsLayout>

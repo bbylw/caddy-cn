@@ -1,0 +1,430 @@
+---
+import BrandStrip from '../components/BrandStrip.astro';
+import BootSequence from '../components/BootSequence.tsx';
+import CodeBlock from '../components/CodeBlock.astro';
+import Icon from '../components/Icon.astro';
+import InstallTabs, { type InstallerView } from '../components/InstallTabs.tsx';
+import ProtocolTimeline from '../components/ProtocolTimeline.tsx';
+import Workbench, { type ScenarioView } from '../components/Workbench.tsx';
+import { INSTALLERS } from '../data/install';
+import { SCENARIOS } from '../data/scenarios';
+import { highlight } from '../lib/shiki';
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const scenarios: ScenarioView[] = await Promise.all(
+  SCENARIOS.map(async (s) => ({
+    id: s.id,
+    name: s.name,
+    summary: s.summary,
+    caddyfile: s.caddyfile,
+    json: s.json,
+    caddyfileHtml: await highlight(s.caddyfile, 'caddyfile'),
+    jsonHtml: await highlight(s.json, 'json'),
+    effects: s.effects,
+  })),
+);
+
+const installers: InstallerView[] = await Promise.all(
+  INSTALLERS.map(async (i) => ({
+    ...i,
+    html: await highlight(i.code, 'bash'),
+  })),
+);
+
+const CADDY_SIDE = `example.com {
+	root * /var/www
+	file_server
+	encode gzip
+}`;
+
+const NGINX_SIDE = `server {
+    listen 80;
+    server_name example.com;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name example.com;
+
+    root /var/www;
+    gzip on;
+    gzip_types text/plain text/css application/json;
+
+    ssl_certificate     /etc/letsencrypt/live/example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
+    ssl_protocols       TLSv1.2 TLSv1.3;
+    ssl_session_cache   shared:SSL:10m;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}`;
+
+const MODULES = [
+  'http.handlers.reverse_proxy',
+  'http.handlers.file_server',
+  'http.handlers.static_response',
+  'http.encoders.zstd',
+  'http.matchers.path_regexp',
+  'tls.issuance.acme',
+  'tls.issuance.internal',
+  'logging.encoders.json',
+  'storage.file_system',
+];
+
+const SCALE = [
+  { value: '数万亿', label: '已服务的 HTTPS 请求' },
+  { value: '数百万', label: '纳管的 TLS 证书' },
+  { value: '数十万', label: '单个实例可承载的站点' },
+];
+---
+
+<BaseLayout
+  title="Caddy 中文站"
+  description="Caddy 是一个默认启用 TLS 的可扩展服务器平台。写下站点地址，证书签发、续期与 HTTP 到 HTTPS 的跳转全部自动完成。用 Go 写成，无运行时依赖。"
+  path="/"
+>
+  <!-- ============================ HERO ============================ -->
+  <section class="shell pb-14 pt-12 md:pb-20 md:pt-16">
+    <div
+      class="grid items-center gap-12 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)] lg:gap-16"
+    >
+      <div class="min-w-0">
+        <p class="mono">默认启用 HTTPS</p>
+        <h1
+          class="mt-4 text-[clamp(2.5rem,6.4vw,4.25rem)] font-semibold leading-[1.04] tracking-[-0.04em]"
+        >
+          让每个站点<br />跑在 HTTPS 上
+        </h1>
+        <p class="mt-5 max-w-[44ch] text-[15.5px] leading-[1.75] text-ink-2">
+          Caddy 是用 Go 写成的服务器平台。写下站点地址，证书的签发与续期、HTTP
+          到 HTTPS 的跳转，全部由它自动完成。
+        </p>
+        <div class="mt-8 flex flex-wrap items-center gap-3">
+          <a href="/docs/install" class="btn btn-primary">
+            安装 Caddy
+            <Icon name="arrow-right" size={16} />
+          </a>
+          <a href="/docs" class="btn btn-ghost">阅读文档</a>
+        </div>
+      </div>
+
+      <div class="min-w-0">
+        <BootSequence client:visible />
+        <p class="mt-3 font-mono text-[11px] text-ink-3">
+          启动日志为真实输出格式的示例，域名与时间为示意。
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ 驱动 ============================ -->
+  <section class="band bg-[var(--paper-2)]">
+    <div class="shell flex flex-wrap items-center gap-x-12 gap-y-6 py-8">
+      <BrandStrip />
+      <p class="max-w-[38ch] text-[13px] leading-relaxed text-ink-3">
+        用 Go 实现，官方提供 Docker 镜像，证书由公共 CA 签发，与更多项目协同工作。
+      </p>
+    </div>
+  </section>
+
+  <!-- ============================ 配置现场 ============================ -->
+  <section class="band">
+    <div class="shell py-20 md:py-28">
+      <div class="max-w-[60ch]">
+        <p class="mono reveal">配置现场</p>
+        <h2
+          class="mt-3 text-[clamp(1.7rem,3.6vw,2.5rem)] font-semibold leading-[1.15] tracking-[-0.03em]"
+        >
+          写下地址，剩下的是 Caddy 的事
+        </h2>
+        <p class="mt-4 text-[15px] leading-[1.75] text-ink-2">
+          Caddyfile 只描述你要什么。证书、跳转、压缩、协议协商都不必写出来，因为它们本来就开着。
+        </p>
+      </div>
+
+      <div class="mt-12">
+        <Workbench client:visible scenarios={scenarios} />
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ 对比 ============================ -->
+  <section class="band bg-[var(--paper-2)]">
+    <div class="shell py-20 md:py-24">
+      <div class="max-w-[58ch]">
+        <h2
+          class="text-[clamp(1.7rem,3.6vw,2.5rem)] font-semibold leading-[1.15] tracking-[-0.03em]"
+        >
+          同一件事，两种写法
+        </h2>
+        <p class="mt-4 text-[15px] leading-[1.75] text-ink-2">
+          把一个目录以 HTTPS 提供出去，并顺带压缩与跳转。
+        </p>
+      </div>
+
+      <div class="mt-10 grid gap-5 lg:grid-cols-2 lg:gap-6">
+        <CodeBlock
+          code={CADDY_SIDE}
+          lang="caddyfile"
+          label="Caddyfile"
+          note="4 行"
+          class="reveal"
+        />
+        <CodeBlock
+          code={NGINX_SIDE}
+          lang="nginx"
+          label="nginx.conf"
+          note="27 行"
+          class="reveal"
+        />
+      </div>
+
+      <p class="mt-6 max-w-[70ch] text-[13.5px] leading-relaxed text-ink-3">
+        两者的能力并不等价：nginx 侧还需要额外的工具去申请证书，并配置定时任务完成续期。Caddy
+        把这部分放进了服务器内部，作为默认行为的一部分。
+      </p>
+    </div>
+  </section>
+
+  <!-- ============================ 协议 ============================ -->
+  <section class="band">
+    <div class="shell py-20 md:py-24">
+      <div class="max-w-[58ch]">
+        <p class="mono reveal">协议</p>
+        <h2
+          class="mt-3 text-[clamp(1.7rem,3.6vw,2.5rem)] font-semibold leading-[1.15] tracking-[-0.03em]"
+        >
+          HTTP/1.1、HTTP/2、HTTP/3 默认全开
+        </h2>
+        <p class="mt-4 text-[15px] leading-[1.75] text-ink-2">
+          不需要开关，也不需要额外的模块。客户端支持哪个就用哪个，握手的时候谈好。
+        </p>
+      </div>
+
+      <div class="mt-12">
+        <ProtocolTimeline client:visible />
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ BENTO ============================ -->
+  <section class="band bg-[var(--paper-2)]">
+    <div class="shell py-20 md:py-24">
+      <div class="max-w-[58ch]">
+        <h2
+          class="text-[clamp(1.7rem,3.6vw,2.5rem)] font-semibold leading-[1.15] tracking-[-0.03em]"
+        >
+          它还能做什么
+        </h2>
+      </div>
+
+      <div class="mt-10 grid gap-4 md:grid-cols-6">
+        <!-- 1 自动 HTTPS -->
+        <div
+          class="reveal min-w-0 rounded-box border border-hair bg-[var(--paper)] p-6 md:col-span-4"
+        >
+          <div class="flex items-center gap-2">
+            <Icon name="lock" size={16} />
+            <h3 class="text-[15px] font-medium">自动 HTTPS</h3>
+          </div>
+          <p class="mt-2 max-w-[52ch] text-[13.5px] leading-relaxed text-ink-2">
+            公网域名向公共 ACME CA 申请证书，内网域名与 IP 由 Caddy 自己的本地
+            CA 签发。证书在到期前于后台续期，不影响在线请求。
+          </p>
+          <dl class="mt-5 grid gap-x-8 gap-y-2 sm:grid-cols-2">
+            {
+              [
+                ['主题', 'example.com'],
+                ['颁发者', "Let's Encrypt / ZeroSSL"],
+                ['有效期', '90 天'],
+                ['续期', '到期前自动完成'],
+                ['回退', '一家 CA 失败则换下一家'],
+                ['挑战方式', 'HTTP-01 / TLS-ALPN / DNS-01'],
+              ].map(([k, v]) => (
+                <div class="flex items-baseline gap-3 border-t border-hair pt-2">
+                  <dt class="w-20 shrink-0 font-mono text-[11px] text-ink-3">{k}</dt>
+                  <dd class="min-w-0 font-mono text-[12.5px] text-ink">{v}</dd>
+                </div>
+              ))
+            }
+          </dl>
+        </div>
+
+        <!-- 2 单二进制 -->
+        <div
+          class="reveal min-w-0 flex flex-col rounded-box border border-hair bg-[var(--paper)] p-6 md:col-span-2"
+        >
+          <div class="flex items-center gap-2">
+            <Icon name="download" size={16} />
+            <h3 class="text-[15px] font-medium">一个二进制</h3>
+          </div>
+          <p class="mt-2 text-[13.5px] leading-relaxed text-ink-2">
+            编译到所有主流平台，运行时没有外部依赖。
+          </p>
+          <div class="mt-auto pt-5">
+            <div class="codeblock codeblock--tight">
+              <div class="px-4 py-3 font-mono text-[11.5px] leading-relaxed">
+                <p class="text-ink-3">$ file caddy</p>
+                <p class="text-ink">ELF 64-bit, statically linked</p>
+                <p class="mt-2 text-ink-3">$ ldd caddy</p>
+                <p class="text-ink">not a dynamic executable</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3 模块化 -->
+        <div
+          class="reveal min-w-0 rounded-box border border-hair bg-[var(--paper)] p-6 md:col-span-2"
+        >
+          <div class="flex items-center gap-2">
+            <Icon name="plugs" size={16} />
+            <h3 class="text-[15px] font-medium">模块化</h3>
+          </div>
+          <p class="mt-2 text-[13.5px] leading-relaxed text-ink-2">
+            从 HTTP 处理器到存储介质都是模块，按需编译进二进制。
+          </p>
+          <ul class="mt-5 flex flex-wrap gap-1.5">
+            {
+              MODULES.map((m) => (
+                <li class="rounded-pill border border-hair px-2 py-1 font-mono text-[10.5px] text-ink-3">
+                  {m}
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+
+        <!-- 4 在线改配置 -->
+        <div
+          class="reveal min-w-0 rounded-box border border-hair bg-[var(--paper)] p-6 md:col-span-2"
+        >
+          <div class="flex items-center gap-2">
+            <Icon name="terminal" size={16} />
+            <h3 class="text-[15px] font-medium">在线改配置</h3>
+          </div>
+          <p class="mt-2 text-[13.5px] leading-relaxed text-ink-2">
+            通过管理端点换配置，零停机；新配置有问题就回滚到上一份。
+          </p>
+          <div class="mt-5">
+            <CodeBlock
+              code={`curl -X POST localhost:2019/load \\
+  -H "Content-Type: application/json" \\
+  -d @caddy.json`}
+              lang="bash"
+              tight
+              copyable={false}
+            />
+          </div>
+        </div>
+
+        <!-- 5 多种写法 -->
+        <div
+          class="reveal min-w-0 rounded-box border border-hair bg-[var(--paper)] p-6 md:col-span-2"
+        >
+          <div class="flex items-center gap-2">
+            <Icon name="book" size={16} />
+            <h3 class="text-[15px] font-medium">不止一种写法</h3>
+          </div>
+          <p class="mt-2 text-[13.5px] leading-relaxed text-ink-2">
+            原生配置是 JSON，配置适配器可以把别的格式转成它。
+          </p>
+          <ul class="mt-5 flex flex-col gap-1.5 font-mono text-[12px] text-ink-2">
+            <li class="flex justify-between border-t border-hair pt-1.5">
+              <span>Caddyfile</span><span class="text-ink-3">内置</span>
+            </li>
+            <li class="flex justify-between border-t border-hair pt-1.5">
+              <span>JSON 5</span><span class="text-ink-3">适配器</span>
+            </li>
+            <li class="flex justify-between border-t border-hair pt-1.5">
+              <span>YAML</span><span class="text-ink-3">适配器</span>
+            </li>
+            <li class="flex justify-between border-t border-hair pt-1.5">
+              <span>NGINX 配置</span><span class="text-ink-3">适配器</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- 6 规模 -->
+        <div
+          class="reveal min-w-0 rounded-box border border-hair bg-[var(--paper)] p-6 md:col-span-6"
+        >
+          <h3 class="text-[15px] font-medium">已经在生产里跑了很多年</h3>
+          <div class="mt-5 grid gap-6 sm:grid-cols-3">
+            {
+              SCALE.map((item) => (
+                <div class="border-t border-hair pt-4">
+                  <p class="text-[clamp(1.9rem,4vw,2.6rem)] font-semibold leading-none tracking-[-0.04em] text-brand">
+                    {item.value}
+                  </p>
+                  <p class="mt-2 text-[13px] text-ink-2">{item.label}</p>
+                </div>
+              ))
+            }
+          </div>
+          <p class="mt-6 max-w-[70ch] text-[13px] leading-relaxed text-ink-3">
+            多个 Caddy 实例共用同一份存储时，会自动协同证书管理，组成集群。规模数据来自官方项目说明。
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ 安装 ============================ -->
+  <section class="band">
+    <div class="shell py-20 md:py-24">
+      <div class="max-w-[58ch]">
+        <h2
+          class="text-[clamp(1.7rem,3.6vw,2.5rem)] font-semibold leading-[1.15] tracking-[-0.03em]"
+        >
+          装上它
+        </h2>
+        <p class="mt-4 text-[15px] leading-[1.75] text-ink-2">
+          挑一个顺手的方式。官方包只含标准模块，需要插件时用 xcaddy 从源码构建。
+        </p>
+      </div>
+
+      <div class="mt-10">
+        <InstallTabs client:visible installers={installers} />
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ 收尾 CTA ============================ -->
+  <section class="band bg-[var(--paper-2)]">
+    <div class="shell py-16 md:py-20">
+      <div
+        class="flex flex-col items-start justify-between gap-8 md:flex-row md:items-end"
+      >
+        <div class="max-w-[46ch]">
+          <h2
+            class="text-[clamp(1.6rem,3.2vw,2.2rem)] font-semibold leading-[1.2] tracking-[-0.03em]"
+          >
+            从入门指南开始，把它跑起来
+          </h2>
+          <p class="mt-3 text-[14.5px] leading-relaxed text-ink-2">
+            官方建议所有人都先读一遍入门指南，不管你有多少经验。
+          </p>
+        </div>
+        <div class="flex flex-wrap items-center gap-3">
+          <a href="/docs/install" class="btn btn-primary">
+            安装 Caddy
+            <Icon name="arrow-right" size={16} />
+          </a>
+          <a
+            href="https://caddy.community"
+            target="_blank"
+            rel="noreferrer"
+            class="btn btn-ghost"
+          >
+            社区论坛
+            <Icon name="arrow-out" size={14} />
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

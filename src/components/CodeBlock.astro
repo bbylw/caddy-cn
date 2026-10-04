@@ -1,0 +1,67 @@
+---
+import { highlight, type CodeLang } from '../lib/shiki';
+import Icon from './Icon.astro';
+
+interface Props {
+  code: string;
+  lang?: CodeLang;
+  /** 左上角的语言 / 文件名标注 */
+  label?: string;
+  /** 右下角的说明（例如「节选」） */
+  note?: string;
+  tight?: boolean;
+  flush?: boolean;
+  copyable?: boolean;
+  class?: string;
+}
+
+const {
+  code,
+  lang = 'caddyfile',
+  label,
+  note,
+  tight = false,
+  flush = false,
+  copyable = true,
+  class: cls,
+} = Astro.props;
+
+const source = code.replace(/^\n+|\n+$/g, '');
+const html = await highlight(source, lang);
+---
+
+<figure
+  class:list={[
+    'codeblock group',
+    tight && 'codeblock--tight',
+    flush && 'codeblock--flush',
+    cls,
+  ]}
+>
+  {
+    label ? (
+      <figcaption class="flex items-center justify-between gap-3 border-b border-hair px-4 py-2">
+        <span class="mono !tracking-[0.12em]">{label}</span>
+        {note ? <span class="mono !normal-case !tracking-normal">{note}</span> : null}
+      </figcaption>
+    ) : null
+  }
+  <div class="relative">
+    <Fragment set:html={html} />
+    {
+      copyable ? (
+        <button
+          type="button"
+          class="copy-btn"
+          data-copy={source}
+          data-state="idle"
+          aria-label="复制代码"
+        >
+          <span class="c-copy"><Icon name="copy" size={14} /></span>
+          <span class="c-check"><Icon name="check" size={14} /></span>
+          <span class="c-x"><Icon name="x" size={14} /></span>
+        </button>
+      ) : null
+    }
+  </div>
+</figure>

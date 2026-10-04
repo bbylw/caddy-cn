@@ -1,0 +1,69 @@
+---
+import CodeBlock from '../../components/CodeBlock.astro';
+import Note from '../../components/Note.astro';
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+
+<DocsLayout slug="architecture">
+  <p>
+    Caddy 最常被当作 HTTPS 服务器或反向代理，但它真正是「服务器的服务器」：一个可以承载任何长期运行
+    Go 程序的平台。Caddy 的「应用」就是以模块形式实现的 Go 程序。
+  </p>
+
+  <h2>从配置到运行</h2>
+  <p>一条配置从写下来到真正接管流量，会经过这几步：</p>
+  <CodeBlock
+    code={`Caddyfile
+  |
+  |  caddy adapt（配置适配器）
+  v
+JSON 配置文档
+  |
+  |  管理 API /load
+  v
+内存中的模块实例
+  |
+  v
+正在工作的服务器`}
+    lang="bash"
+    label="配置管线"
+  />
+  <p>
+    注意第三步：Caddy 并不是「读一个文件然后按它做事」，而是把配置实例化成真正的
+    Go 类型值。你在配置里设置的是内存中已初始化类型的实际值，这些值驱动着从 HTTP
+    处理器、TLS 握手到存储介质的一切。
+  </p>
+
+  <h2>模块化</h2>
+  <p>
+    Caddy 的几乎每个部分都是模块。这意味着它可以在不臃肿的前提下做任何事：不需要的功能不编译进来，需要的功能写成一个模块插进去。
+  </p>
+  <table>
+    <thead>
+      <tr><th>层次</th><th>例子</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>应用</td><td><code>http</code>、<code>tls</code>、<code>pki</code>、<code>event</code></td></tr>
+      <tr><td>HTTP 处理器</td><td><code>file_server</code>、<code>reverse_proxy</code></td></tr>
+      <tr><td>请求匹配器</td><td><code>host</code>、<code>path</code>、<code>expression</code></td></tr>
+      <tr><td>证书签发者</td><td><code>acme</code>、<code>internal</code></td></tr>
+      <tr><td>存储介质</td><td><code>file_system</code>，也可以是数据库或对象存储</td></tr>
+      <tr><td>日志编码器</td><td><code>json</code>、<code>console</code></td></tr>
+    </tbody>
+  </table>
+  <p>模块有全局唯一的名字，按命名空间组织，详见<a href="/docs/modules">模块</a>一篇。</p>
+
+  <h2>优雅重载</h2>
+  <p>
+    配置变更不会重启进程。新配置先构建、先启动，旧配置随后停掉，中间只有极短的重叠窗口。这也意味着正在处理中的连接不会被硬生生切断。
+  </p>
+
+  <h2>集群协同</h2>
+  <p>
+    多个 Caddy 实例指向同一份存储时，会自动共享证书并协调续期，避免重复签发与竞态。这让横向扩容时证书管理不再是问题。
+  </p>
+
+  <Note title="为什么它内存安全">
+    Caddy 用 Go 写成。相比 C 语言实现的服务器，它在内存安全上有语言层面的保证，这也是它能在生产里长期稳定运行的原因之一。
+  </Note>
+</DocsLayout>

@@ -1,0 +1,72 @@
+---
+import CodeBlock from '../../components/CodeBlock.astro';
+import Note from '../../components/Note.astro';
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+
+<DocsLayout slug="quick-starts">
+  <p>
+    这几篇的目标是让你尽快跑起来，尽量不做解释。跑通之后，强烈建议回头读参考文档，弄清楚服务器到底在做什么。
+  </p>
+
+  <h2>用 Caddyfile</h2>
+  <p>当前目录建一个名为 <code>Caddyfile</code> 的文件，然后 <code>caddy run</code>。</p>
+  <CodeBlock
+    code={`example.com {
+	root * /var/www
+	file_server
+}`}
+    lang="caddyfile"
+    label="静态站点"
+  />
+  <p>端口、协议、证书全部默认开启，不需要额外配置。</p>
+
+  <h2>静态文件服务器</h2>
+  <p>不想写配置文件的话，<code>file-server</code> 子命令开箱即用：</p>
+  <CodeBlock code={`caddy file-server --listen :9000 --browse`} lang="bash" label="终端" />
+  <p>想直接上 HTTPS，加一个域名：</p>
+  <CodeBlock
+    code={`caddy file-server --domain example.com`}
+    lang="bash"
+    label="自动申请证书"
+  />
+
+  <h2>反向代理</h2>
+  <p>把 80 端口的流量转给本机的 9000 端口：</p>
+  <CodeBlock
+    code={`caddy reverse-proxy --from example.com --to 127.0.0.1:9000`}
+    lang="bash"
+    label="终端"
+  />
+  <p>写成配置文件则是：</p>
+  <CodeBlock
+    code={`example.com {
+	reverse_proxy 127.0.0.1:9000
+}`}
+    lang="caddyfile"
+    label="Caddyfile"
+  />
+
+  <h2>API</h2>
+  <p>先用 JSON 配好，再通过管理端点动态下发：</p>
+  <CodeBlock
+    code={`curl localhost:2019/load \\
+  -H "Content-Type: application/json" \\
+  -d @caddy.json
+
+curl localhost:2019/config/`}
+    lang="bash"
+    label="终端"
+  />
+  <p>所有改动都是零停机的，出错会回滚。</p>
+
+  <h2>HTTPS</h2>
+  <p>在站点地址里写上域名，其余交给 Caddy：</p>
+  <CodeBlock code={`example.com {\n\trespond "Hello"\n}`} lang="caddyfile" label="公网域名" />
+  <p>没有公网域名也能拿到浏览器信任的证书：</p>
+  <CodeBlock code={`localhost {\n\trespond "Hello"\n}`} lang="caddyfile" label="本地域名" />
+  <Note title="别忘了 DNS">
+    公网域名要事先把 A/AAAA 记录指向这台服务器，并且 80、443
+    端口对外开放。这样第一次启动时 Caddy 才能完成验证。
+  </Note>
+</DocsLayout>

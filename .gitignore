@@ -1,0 +1,10 @@
+dist/
+.astro/
+node_modules/
+.shots/
+.DS_Store
+*.log
+.env
+.env.production
+generated-images/
+public/images/raw/

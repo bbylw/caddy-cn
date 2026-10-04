@@ -1,0 +1,87 @@
+---
+import CodeBlock from '../../components/CodeBlock.astro';
+import Note from '../../components/Note.astro';
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+
+<DocsLayout slug="api">
+  <p>
+    Caddy 的管理端点是它最与众不同的地方之一：配置是活的，可以随时读取、修改、导出，所有改动都优雅、零停机。
+  </p>
+
+  <Note kind="warn" title="只允许本机访问">
+    端点默认监听 <code>localhost:2019</code>，这是控制 Caddy 的接口，不是你的网站。把
+    <code>admin</code> 暴露到公网之前，务必想清楚鉴权怎么做。
+  </Note>
+
+  <h2>端点一览</h2>
+  <table>
+    <thead>
+      <tr><th>方法与路径</th><th>作用</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>GET /config/</code></td><td>读取当前完整配置</td></tr>
+      <tr><td><code>POST /load</code></td><td>替换整份配置</td></tr>
+      <tr><td><code>POST /stop</code></td><td>优雅停止 Caddy</td></tr>
+      <tr><td><code>GET /config/...路径</code></td><td>读取配置里的某个子树</td></tr>
+      <tr><td><code>POST /config/...路径</code></td><td>在该子树下插入或创建</td></tr>
+      <tr><td><code>PUT /config/...路径</code></td><td>覆盖该子树</td></tr>
+      <tr><td><code>PATCH /config/...路径</code></td><td>修改数组里的某一项</td></tr>
+      <tr><td><code>DELETE /config/...路径</code></td><td>删除该子树</td></tr>
+      <tr><td><code>GET /id/...模块 ID</code></td><td>按模块的 ID 定位，不受数组位置影响</td></tr>
+    </tbody>
+  </table>
+
+  <h2>替换整份配置</h2>
+  <CodeBlock
+    code={`curl localhost:2019/load \\
+	-H "Content-Type: application/json" \\
+	-d @caddy.json`}
+    lang="bash"
+    label="终端"
+  />
+  <p>
+    <code>/load</code> 是唯一一个会替换整份配置的端点，Caddyfile 走 API 时也只能用它。
+  </p>
+
+  <h2>配置遍历</h2>
+  <p>
+    配置文档的路径就是 API 的路径。想看 HTTP 应用里第一台服务器的第一条路由，直接问：
+  </p>
+  <CodeBlock
+    code={`curl localhost:2019/config/apps/http/servers/srv0/routes/0`}
+    lang="bash"
+    label="终端"
+  />
+  <p>往这个路径 POST 一段 JSON 就能加一条路由：</p>
+  <CodeBlock
+    code={`curl localhost:2019/config/apps/http/servers/srv0/routes \\
+	-H "Content-Type: application/json" \\
+	-d '{
+		"handle": [{
+			"handler": "static_response",
+			"body": "Hi"
+		}]
+	}'`}
+    lang="bash"
+    label="终端"
+  />
+
+  <h2>优雅与回滚</h2>
+  <p>
+    新配置会先启动，确认无误后再停掉旧配置，所以在极短的时间窗口里两份配置同时在运行。如果新配置加载失败，Caddy
+    会回滚到上一份能用的配置，服务器不会因此下线。
+  </p>
+
+  <h2>导出</h2>
+  <p>当前运行中的配置随时可以导出归档：</p>
+  <CodeBlock
+    code={`curl localhost:2019/config/ > running.json`}
+    lang="bash"
+    label="终端"
+  />
+  <p>
+    这也是把运行时状态固化下来、交给版本管理的方式。前提是你最初就是用 JSON
+    配置的；走适配器进来的配置无法还原回原格式。
+  </p>
+</DocsLayout>

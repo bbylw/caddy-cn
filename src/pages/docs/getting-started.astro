@@ -1,0 +1,158 @@
+---
+import CodeBlock from '../../components/CodeBlock.astro';
+import Note from '../../components/Note.astro';
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+
+<DocsLayout slug="getting-started">
+  <p>这篇教程会带你过一遍 Caddy 的基础用法，帮你建立起一个完整的心智模型。</p>
+
+  <h2>准备</h2>
+  <ul>
+    <li>基本的终端操作能力，会用一个文本编辑器</li>
+    <li>PATH 里有 <code>caddy</code> 和 <code>curl</code></li>
+  </ul>
+  <Note kind="warn" title="先停掉服务">
+    如果你是用包管理器装的 Caddy，它可能已经作为服务在运行了。做这篇教程之前请先把服务停掉。
+  </Note>
+
+  <h2>运行守护进程</h2>
+  <p>不带子命令的 <code>caddy</code> 只会打印帮助文本。要作为守护进程启动，用 <code>run</code>：</p>
+  <CodeBlock code={`caddy run`} lang="bash" label="终端" />
+  <p>
+    这条命令会一直阻塞。它此刻在做什么？其实什么都没做，因为默认配置是空的。可以在另一个终端里用
+    <a href="/docs/api">管理 API</a> 确认这一点：
+  </p>
+  <CodeBlock code={`curl localhost:2019/config/`} lang="bash" label="终端" />
+  <Note title="这不是你的网站">
+    <code>localhost:2019</code> 是管理端点，用来控制 Caddy 本身，默认只允许本机访问。
+  </Note>
+
+  <h2>你的第一份配置</h2>
+  <p>Caddy 的配置本质上就是一份 JSON 文档。把它存成 <code>caddy.json</code>：</p>
+  <CodeBlock
+    code={`{
+	"apps": {
+		"http": {
+			"servers": {
+				"example": {
+					"listen": [":2015"],
+					"routes": [
+						{
+							"handle": [{
+								"handler": "static_response",
+								"body": "Hello, world!"
+							}]
+						}
+					]
+				}
+			}
+		}
+	}
+}`}
+    lang="json"
+    label="caddy.json"
+  />
+  <p>然后上传：</p>
+  <CodeBlock
+    code={`curl localhost:2019/load \\
+	-H "Content-Type: application/json" \\
+	-d @caddy.json`}
+    lang="bash"
+    label="终端"
+  />
+  <p>验证一下配置生效了没有：</p>
+  <CodeBlock code={`curl localhost:2015` + '\n' + `Hello, world!`} lang="bash" label="终端" />
+  <p>
+    看到 <em>Hello, world!</em> 就说明通了。部署到生产之前，先确认配置确实如你所料，永远是个好习惯。
+  </p>
+
+  <h2>你的第一个 Caddyfile</h2>
+  <p>为了输出一句 Hello world，刚才那套流程确实有点繁琐。同样一份配置，写成 Caddyfile 是这样：</p>
+  <CodeBlock
+    code={`:2015
+respond "Hello, world!"`}
+    lang="caddyfile"
+    label="Caddyfile"
+  />
+  <p>
+    存成一个没有扩展名、名为 <code>Caddyfile</code> 的文件。先 Ctrl+C 停掉 Caddy，然后执行
+    <code>caddy adapt</code>：
+  </p>
+  <CodeBlock code={`caddy adapt`} lang="bash" label="终端" />
+  <p>
+    你会看到 JSON 输出。我们刚才用的是<a href="/docs/config-adapters">配置适配器</a
+    >，它把 Caddyfile 转成了 Caddy 原生的 JSON 结构。
+  </p>
+  <p>
+    其实这一步可以省掉。只要当前目录有一个叫 <code>Caddyfile</code>
+    的文件，并且没有另外指定配置，Caddy 就会自动加载、适配并直接运行它：
+  </p>
+  <CodeBlock code={`caddy run`} lang="bash" label="终端" />
+
+  <h2>JSON 与 Caddyfile 怎么选</h2>
+  <table>
+    <thead>
+      <tr><th>JSON</th><th>Caddyfile</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>容易由程序生成</td><td>适合手工编写</td></tr>
+      <tr><td>容易编程操作</td><td>不便自动化</td></tr>
+      <tr><td>表达能力极强</td><td>表达能力适中</td></tr>
+      <tr><td>覆盖 Caddy 全部功能</td><td>覆盖大部分功能</td></tr>
+      <tr><td>支持配置遍历</td><td>不支持在 Caddyfile 内遍历</td></tr>
+      <tr><td>可以只改一部分</td><td>只能整份替换</td></tr>
+      <tr><td>可以导出</td><td>不能导出</td></tr>
+      <tr><td>兼容所有 API 端点</td><td>只兼容部分端点</td></tr>
+      <tr><td>文档自动生成</td><td>文档手写</td></tr>
+      <tr><td>更高效</td><td>开销略高</td></tr>
+    </tbody>
+  </table>
+  <p>
+    两种方式都能配合 Caddy 的 API 使用，但只有 JSON 能用上全部功能。走适配器时，唯一可用的端点是
+    <code>/load</code>。
+  </p>
+
+  <h2>API 还是配置文件</h2>
+  <p>
+    底层来看，配置文件最终也要经过 Caddy 的 API 端点，<code>caddy</code>
+    命令只是把这些调用包装了一下。
+  </p>
+  <table>
+    <thead>
+      <tr><th>API</th><th>配置文件</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>用 HTTP 请求改配置</td><td>用 shell 命令改配置</td></tr>
+      <tr><td>容易横向扩展</td><td>难以横向扩展</td></tr>
+      <tr><td>不便人工维护</td><td>便于人工维护</td></tr>
+    </tbody>
+  </table>
+  <p>
+    两种工作流可以混用，但不建议：一个服务器最好只有一个配置来源。多数人最终会落在
+    「JSON 配 API」或者「Caddyfile 配 CLI」这两种组合上。
+  </p>
+
+  <h2>启动、停止与后台运行</h2>
+  <p>
+    <code>caddy run</code> 是最常用的方式，做成系统服务时尤其如此。如果想让它到后台去跑，用
+    <code>caddy start</code>：
+  </p>
+  <CodeBlock code={`caddy start\ncaddy stop`} lang="bash" label="终端" />
+  <p>
+    后台运行时 Ctrl+C 帮不了你，得自己调 <code>caddy stop</code>，或者调 API 的
+    <code>/stop</code> 端点。
+  </p>
+
+  <h2>零停机重载配置</h2>
+  <p>所有会加载或修改配置的 API 端点都是优雅的、零停机的。</p>
+  <Note kind="warn" title="别用 Ctrl+C 换配置">
+    停掉再重启会让服务器下线。停止服务与修改配置是两件独立的事。
+  </Note>
+  <p>改完配置文件后，用 <code>caddy reload</code> 做一次优雅的替换：</p>
+  <CodeBlock code={`caddy reload`} lang="bash" label="终端" />
+  <p>
+    它底层还是走 API：加载并（如有必要）适配配置文件，然后在不停机的情况下替换掉正在运行的配置。如果新配置有错，Caddy
+    会回滚到上一份能用的配置。严格来说，新配置会先于旧配置启动，所以有那么一瞬间两份配置同时在跑。
+  </p>
+</DocsLayout>

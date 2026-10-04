@@ -1,0 +1,616 @@
+@import 'tailwindcss';
+
+/* ==========================================================================
+   字体：自托管 Geist / Geist Mono（仅 latin + latin-ext 子集）
+   中文回落系统字体栈，避免引入国内不可达的 CDN。
+   ========================================================================== */
+@font-face {
+  font-family: 'Geist';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('/fonts/geist-geist-latin-wght-normal.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Geist';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('/fonts/geist-geist-latin-ext-wght-normal.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF,
+    U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020,
+    U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Geist Mono';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('/fonts/geist-mono-geist-mono-latin-wght-normal.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Geist Mono';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('/fonts/geist-mono-geist-mono-latin-ext-wght-normal.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF,
+    U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020,
+    U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* ==========================================================================
+   语义令牌。整组在 html[data-theme='dark'] 下翻转，组件无需写 dark: 变体。
+   中性色统一偏冷的石墨灰，全站单一强调色（Caddy 绿）。
+   ========================================================================== */
+:root {
+  --paper: #fbfcfd;
+  --paper-2: #f3f5f8;
+  --paper-3: #e9edf1;
+  --paper-veil: #fbfcfdf2;
+
+  --ink: #0f151a;
+  --ink-2: #48525c;
+  --ink-3: #63707d;
+
+  --hair: #dde3e9;
+  --hair-2: #c6ced6;
+
+  --brand: #167c48;
+  --brand-hover: #105e3a;
+  --brand-bright: #22a75b;
+  --brand-veil: #167c4817;
+  --on-brand: #ffffff;
+
+  /* 三通道：同一色相三档浓度，用于编码次序（协议世代、步骤序列） */
+  --lane-1: #167c48;
+  --lane-2: #4aa877;
+  --lane-3: #8fc9ab;
+
+  --shadow-1: 0 1px 2px #0f151a0a;
+  --shadow-2: 0 8px 28px -12px #0f151a24;
+}
+
+html[data-theme='dark'] {
+  --paper: #0d1116;
+  --paper-2: #141a21;
+  --paper-3: #1b232c;
+  --paper-veil: #0d1116f2;
+
+  --ink: #eef2f6;
+  --ink-2: #a9b4c0;
+  --ink-3: #7c8894;
+
+  --hair: #232c35;
+  --hair-2: #333f4a;
+
+  --brand: #4cc38a;
+  --brand-hover: #63d79e;
+  --brand-bright: #63d79e;
+  --brand-veil: #4cc38a1f;
+  --on-brand: #08120c;
+
+  --lane-1: #4cc38a;
+  --lane-2: #38976a;
+  --lane-3: #2a6b4d;
+
+  --shadow-1: 0 1px 2px #00000040;
+  --shadow-2: 0 10px 32px -14px #00000080;
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-paper-2: var(--paper-2);
+  --color-paper-3: var(--paper-3);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-hair: var(--hair);
+  --color-hair-2: var(--hair-2);
+  --color-brand: var(--brand);
+  --color-brand-bright: var(--brand-bright);
+  --color-lane-1: var(--lane-1);
+  --color-lane-2: var(--lane-2);
+  --color-lane-3: var(--lane-3);
+
+  --font-sans: 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI',
+    'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo,
+    'Cascadia Mono', monospace;
+
+  --radius-box: 12px;
+  --radius-ctl: 8px;
+  --radius-pill: 999px;
+
+  --shadow-1: var(--shadow-1);
+  --shadow-2: var(--shadow-2);
+}
+
+/* ==========================================================================
+   基础层
+   ========================================================================== */
+@layer base {
+  * {
+    border-color: var(--hair);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-feature-settings: 'cv01', 'cv02', 'ss01';
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: var(--brand-veil);
+    color: var(--ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    text-wrap: balance;
+    letter-spacing: -0.02em;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* 全角标点后不折行 */
+  .cjk {
+    word-break: normal;
+    overflow-wrap: anywhere;
+    line-break: strict;
+  }
+}
+
+/* ==========================================================================
+   组件层
+   ========================================================================== */
+@utility shell {
+  width: 100%;
+  max-width: 1240px;
+  margin-inline: auto;
+  padding-inline: 20px;
+  @media (width >= 768px) {
+    padding-inline: 32px;
+  }
+}
+
+@utility shell-narrow {
+  width: 100%;
+  max-width: 860px;
+  margin-inline: auto;
+  padding-inline: 20px;
+  @media (width >= 768px) {
+    padding-inline: 32px;
+  }
+}
+
+/* 分节发丝线 */
+.band {
+  border-top: 1px solid var(--hair);
+}
+
+/* 眉题 / 标注统一 mono */
+.mono {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+/* 按钮 */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 44px;
+  padding-inline: 22px;
+  border-radius: var(--radius-ctl);
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    transform 0.12s ease;
+}
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn-primary {
+  background: var(--brand);
+  color: var(--on-brand);
+  border: 1px solid transparent;
+}
+.btn-primary:hover {
+  background: var(--brand-hover);
+}
+
+.btn-ghost {
+  border: 1px solid var(--hair);
+  color: var(--ink);
+  background: transparent;
+}
+.btn-ghost:hover {
+  border-color: var(--hair-2);
+  background: var(--paper-2);
+}
+
+/* 入场揭示：无 JS 时全显，reduced-motion 直接就位 */
+html.js .reveal {
+  opacity: 0;
+  transform: translateY(14px);
+}
+html.js .reveal.is-in {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+/* 移动端菜单面板 */
+.mobile-nav {
+  display: none;
+}
+html[data-menu='open'] .mobile-nav {
+  display: block;
+}
+@media (width >= 768px) {
+  .mobile-nav {
+    display: none !important;
+  }
+}
+
+/* 顶栏滚动进度条。timeline 必须单独成条声明，不可与 animation 简写同选择器，
+   否则压缩器会折成 `animation: x linear both scroll(root)` 导致整条声明失效。 */
+.topbar-progress {
+  animation: prog-grow linear both;
+}
+body .topbar-progress {
+  animation-timeline: scroll(root);
+}
+@keyframes prog-grow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* ==========================================================================
+   代码高亮：shiki defaultColor:false，浅深两档靠 CSS 变量切换
+   ========================================================================== */
+html:not([data-theme='dark']) .shiki,
+html:not([data-theme='dark']) .shiki span {
+  color: var(--shiki-light);
+  background-color: var(--shiki-light-bg);
+}
+html[data-theme='dark'] .shiki,
+html[data-theme='dark'] .shiki span {
+  color: var(--shiki-dark);
+  background-color: var(--shiki-dark-bg);
+}
+html:not([data-theme='dark']) pre.astro-code,
+html:not([data-theme='dark']) pre.astro-code span {
+  color: var(--shiki-light);
+  background-color: var(--shiki-light-bg);
+}
+html[data-theme='dark'] pre.astro-code,
+html[data-theme='dark'] pre.astro-code span {
+  color: var(--shiki-dark);
+  background-color: var(--shiki-dark-bg);
+}
+
+.codeblock {
+  position: relative;
+  border: 1px solid var(--hair);
+  border-radius: var(--radius-box);
+  overflow: hidden;
+  background: var(--paper-2);
+}
+.codeblock pre {
+  margin: 0;
+  padding: 16px 18px;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  tab-size: 2;
+}
+.codeblock--tight pre {
+  padding: 14px 16px;
+  font-size: 0.78rem;
+}
+.codeblock--flush {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+/* ==========================================================================
+   文档正文排版
+   ========================================================================== */
+.docs-body {
+  font-size: 15px;
+  line-height: 1.8;
+}
+.docs-body > * + * {
+  margin-top: 1.05em;
+}
+.docs-body h2 {
+  font-size: 1.32rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin-top: 2.4em;
+  padding-top: 1.5em;
+  border-top: 1px solid var(--hair);
+  scroll-margin-top: 6rem;
+}
+.docs-body > h2:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+.docs-body h3 {
+  font-size: 1.03rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin-top: 1.9em;
+  scroll-margin-top: 6rem;
+}
+.docs-body p,
+.docs-body li {
+  color: var(--ink-2);
+  max-width: 70ch;
+}
+.docs-body strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+.docs-body code {
+  font-family: var(--font-mono);
+  font-size: 0.86em;
+  background: var(--paper-2);
+  border: 1px solid var(--hair);
+  border-radius: 4px;
+  padding: 0.08em 0.34em;
+  word-break: break-word;
+}
+.docs-body pre code,
+.docs-body .codeblock code {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font-size: inherit;
+  word-break: normal;
+}
+.docs-body ul,
+.docs-body ol {
+  padding-left: 1.15em;
+}
+.docs-body ul {
+  list-style: disc;
+}
+.docs-body ol {
+  list-style: decimal;
+}
+.docs-body li + li {
+  margin-top: 0.45em;
+}
+.docs-body li::marker {
+  color: var(--ink-3);
+}
+.docs-body a {
+  color: var(--brand);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+.docs-body a:hover {
+  text-decoration-thickness: 2px;
+}
+.docs-body table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+.docs-body caption {
+  text-align: left;
+  padding-bottom: 8px;
+  color: var(--ink-3);
+  font-size: 12.5px;
+}
+.docs-body th,
+.docs-body td {
+  text-align: left;
+  padding: 9px 14px 9px 0;
+  border-top: 1px solid var(--hair);
+  vertical-align: top;
+}
+.docs-body th {
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+.docs-body td code {
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   复制按钮：三态（待复制 / 已复制 / 失败） */
+[data-copy] {
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--hair);
+  border-radius: var(--radius-ctl);
+  background: var(--paper);
+  color: var(--ink-3);
+  transition:
+    opacity 0.18s ease,
+    color 0.18s ease,
+    border-color 0.18s ease;
+}
+[data-copy]:hover {
+  color: var(--ink);
+  border-color: var(--hair-2);
+}
+[data-copy][data-state='done'] {
+  color: var(--brand);
+  border-color: var(--brand);
+}
+[data-copy][data-state='error'] {
+  color: #b4342b;
+  border-color: #b4342b;
+}
+html[data-theme='dark'] [data-copy][data-state='error'] {
+  color: #f08b80;
+  border-color: #f08b80;
+}
+[data-copy] .c-check,
+[data-copy] .c-x {
+  display: none;
+}
+[data-copy][data-state='done'] .c-copy,
+[data-copy][data-state='error'] .c-copy {
+  display: none;
+}
+[data-copy][data-state='done'] .c-check {
+  display: inline-flex;
+}
+[data-copy][data-state='error'] .c-x {
+  display: inline-flex;
+}
+
+/* 悬浮在代码块右上角的紧凑形态 */
+.copy-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  size: 30px;
+  opacity: 0;
+}
+.codeblock:hover .copy-btn,
+.copy-btn:focus-visible {
+  opacity: 1;
+}
+[data-copy][data-state='done'].copy-btn,
+[data-copy][data-state='error'].copy-btn {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .copy-btn {
+    opacity: 1;
+  }
+}
+
+/* 工作台：切换配置时的淡入，以及效果清单的逐条点亮 */
+@keyframes wb-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.wb-fade {
+  animation: wb-fade-in 0.34s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.wb-item {
+  animation: wb-fade-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* 协议时序：条从左侧生长。未开跑时保持满宽，避免 JS 失效时内容不可见 */
+@keyframes lane-grow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+.pt-bar {
+  transform-origin: left center;
+}
+.pt-panel[data-phase='armed'] .pt-bar {
+  transform: scaleX(0);
+}
+.pt-panel[data-phase='running'] .pt-bar {
+  animation: lane-grow 0.85s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* 启动日志里的光标 */
+@keyframes boot-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+.boot-caret {
+  animation: boot-blink 1s steps(1) infinite;
+}
+
+/* ==========================================================================
+   reduced motion
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  html.js .reveal,
+  html.js .reveal.is-in {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .topbar-progress {
+    animation: none;
+    transform: scaleX(1);
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

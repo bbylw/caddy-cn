@@ -1,0 +1,66 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+
+<DocsLayout slug="features">
+  <p>把 Caddy 的能力摊开看一遍。每一条背后都有对应的文档页可以深入。</p>
+
+  <h2>配置</h2>
+  <ul>
+    <li>
+      <strong>易写的配置</strong>：用 <a href="/docs/caddyfile">Caddyfile</a
+      >，几行就把一个站点跑起来
+    </li>
+    <li>
+      <strong>强大的配置</strong>：原生 <a href="/docs/json">JSON 配置</a
+      >，表达能力完整、可编程
+    </li>
+    <li>
+      <strong>动态配置</strong>：通过 <a href="/docs/api">JSON API</a
+      > 在线修改，零停机，出错自动回滚
+    </li>
+    <li>
+      <strong>配置适配器</strong>：不喜欢 JSON 也行，见<a href="/docs/config-adapters">配置适配器</a>
+    </li>
+  </ul>
+
+  <h2>HTTPS</h2>
+  <ul>
+    <li>
+      <strong>默认自动 HTTPS</strong>：见<a href="/docs/automatic-https">自动 HTTPS</a>
+    </li>
+    <li>公网域名使用 ZeroSSL 与 Let's Encrypt</li>
+    <li>为内部域名和 IP 提供完全托管的本地 CA</li>
+    <li>可在集群中与其他 Caddy 实例协同工作</li>
+    <li>多证书颁发机构回退</li>
+    <li>支持加密客户端 Hello（ECH）</li>
+    <li>在其他服务器因 TLS、OCSP 或证书问题宕机时依然在线</li>
+  </ul>
+
+  <h2>协议与性能</h2>
+  <ul>
+    <li>默认支持 HTTP/1.1、HTTP/2 与 HTTP/3</li>
+    <li>经过生产验证：已服务数万亿次请求，管理数百万张 TLS 证书</li>
+    <li>可扩展至数十万个站点，已在生产中得到证明</li>
+  </ul>
+
+  <h2>部署</h2>
+  <ul>
+    <li>
+      <strong>随处运行</strong>，且<strong>没有外部依赖</strong>，甚至可以不需要 libc
+    </li>
+    <li>
+      <strong>高度可扩展</strong>：<a href="/docs/architecture">模块化架构</a
+      >让 Caddy 能做任何事而不会臃肿
+    </li>
+    <li>使用 Go 语言编写，相比其他服务器有更高的内存安全保证</li>
+  </ul>
+
+  <h2>还有更多</h2>
+  <p>
+    这里只列了主干。官方特性页还有更完整的清单，以及大量值得探索的细节：
+    <a href="https://caddyserver.com/features" target="_blank" rel="noreferrer"
+      >caddyserver.com/features</a
+    >。
+  </p>
+</DocsLayout>

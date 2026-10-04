@@ -1,0 +1,8 @@
+{
+  // 让 IDE 的 TS 服务使用工作区里的 TypeScript（本项目为 TS 6），
+  // 否则旧的内置版本不认识 moduleResolution: "bundler"，
+  // 也会连带报「找不到文件 astro/tsconfigs/strict」。
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "typescript.preferences.importModuleSpecifier": "non-relative"
+}

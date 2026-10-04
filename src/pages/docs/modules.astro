@@ -1,0 +1,99 @@
+---
+import CodeBlock from '../../components/CodeBlock.astro';
+import Note from '../../components/Note.astro';
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+
+<DocsLayout slug="modules">
+  <p>
+    Caddy 的功能都以模块形式存在。模块有全局唯一的名字，按命名空间组织，编译进二进制后就能在配置里使用。
+  </p>
+
+  <h2>命名空间</h2>
+  <p>模块名本身就是它的位置。几个常用的命名空间：</p>
+  <table>
+    <thead>
+      <tr><th>命名空间</th><th>说明</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>http.handlers.*</code></td><td>HTTP 处理器，请求经过的一环</td></tr>
+      <tr><td><code>http.matchers.*</code></td><td>请求匹配器</td></tr>
+      <tr><td><code>http.encoders.*</code></td><td>压缩编码</td></tr>
+      <tr><td><code>tls.issuance.*</code></td><td>证书签发者</td></tr>
+      <tr><td><code>tls.get_certificate.*</code></td><td>获取证书的方式</td></tr>
+      <tr><td><code>logging.encoders.*</code></td><td>日志编码器</td></tr>
+      <tr><td><code>storage.*</code></td><td>存储介质</td></tr>
+      <tr><td><code>dns.providers.*</code></td><td>DNS 提供商，用于 DNS 挑战</td></tr>
+      <tr><td><code>caddy.listeners.*</code></td><td>监听器包装</td></tr>
+    </tbody>
+  </table>
+
+  <h2>标准发行版包含的模块</h2>
+  <p>官方构建只包含标准模块。常见的有：</p>
+  <CodeBlock
+    code={`http.handlers.reverse_proxy
+http.handlers.file_server
+http.handlers.static_response
+http.handlers.request_body
+http.handlers.encode
+http.handlers.intercept
+http.matchers.host
+http.matchers.path
+http.matchers.path_regexp
+http.matchers.method
+http.matchers.header
+http.matchers.expression
+http.matchers.remote_ip
+tls.issuance.acme
+tls.issuance.internal
+tls.handshake_match.sni
+logging.encoders.json
+logging.encoders.console
+logging.writers.file
+logging.writers.stderr
+storage.file_system`}
+    lang="bash"
+    label="节选"
+  />
+
+  <h2>装插件</h2>
+  <p>插件是第三方的 Go 模块，需要重新编译才能用：</p>
+  <CodeBlock
+    code={`xcaddy build \\
+  --with github.com/caddy-dns/cloudflare \\
+  --with github.com/mholt/caddy-l4`}
+    lang="bash"
+    label="xcaddy"
+  />
+  <p>或者到<a href="https://caddyserver.com/download" target="_blank" rel="noreferrer">官方下载页</a>勾选模块，直接下载一个已经编好的二进制。</p>
+
+  <Note title="怎么知道自己有哪些模块">
+    <code>caddy list-modules</code> 会列出当前二进制里的全部模块，加上
+    <code>--packages</code> 还能看到它们各自来自哪个 Go 包。
+  </Note>
+
+  <h2>自己写一个</h2>
+  <p>
+    写一个模块，本质上是实现一个接口、给它一个唯一的名字，再用
+    <code>RegisterModule</code> 注册。模块通过 <code>UnmarshalCaddyfile</code>
+    支持在 Caddyfile 里使用，通过实现 <code>Provision</code> 在启动时做准备工作。
+  </p>
+  <CodeBlock
+    code={`func init() {
+	caddy.RegisterModule(MyHandler{})
+}
+
+func (MyHandler) CaddyModule() caddy.ModuleInfo {
+	return caddy.ModuleInfo{
+		ID:  "http.handlers.my_handler",
+		New: func() caddy.Module { return new(MyHandler) },
+	}
+}`}
+    lang="go"
+    label="my_handler.go"
+  />
+  <p>
+    写插件时请遵循宿主项目的约定：不要在模块初始化阶段做重量级工作，配置校验放到
+    <code>Provision</code> 或 <code>Validate</code> 里。
+  </p>
+</DocsLayout>

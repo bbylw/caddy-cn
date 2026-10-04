@@ -1,0 +1,171 @@
+---
+import CodeBlock from '../../components/CodeBlock.astro';
+import Note from '../../components/Note.astro';
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+
+<DocsLayout slug="automatic-https">
+  <p>
+    Caddy 是第一个把 HTTPS 做成自动且默认开启的 Web 服务器，从 2015
+    年这件事第一次变得可行那天就开始这么做了。它为所有站点准备 TLS
+    证书、持续续期，还顺手把 HTTP 跳转到 HTTPS。不需要额外配置，不需要别的工具。
+  </p>
+
+  <h2>默认行为</h2>
+  <ul>
+    <li>
+      公网 DNS 域名用公共 ACME CA 签发证书，默认配置了
+      <a href="https://letsencrypt.org" target="_blank" rel="noreferrer">Let's Encrypt</a> 与
+      <a href="https://zerossl.com" target="_blank" rel="noreferrer">ZeroSSL</a>
+    </li>
+    <li>
+      IP 地址与内部主机名（例如 <code>localhost</code>、<code>127.0.0.1</code>）由 Caddy
+      自己的本地 CA 签发，并在本机写入信任
+    </li>
+    <li>所有纳管的证书在后台续期，80 端口的 HTTP 请求会自动跳转到 443</li>
+  </ul>
+
+  <h2>什么时候会激活</h2>
+  <p>Caddy 在知道自己在为哪个域名或 IP 服务时就会隐式激活自动 HTTPS。告诉它的方式有：</p>
+  <ul>
+    <li>Caddyfile 里的站点地址</li>
+    <li>JSON 路由顶层的 host 匹配器</li>
+    <li>命令行参数，例如 <code>--domain</code> 或 <code>--from</code></li>
+    <li>JSON 里的 <code>automate</code> 证书加载器</li>
+  </ul>
+  <p>
+    自动 HTTPS 永远不会覆盖你写下的显式配置，它只是往上加。地址写成
+    <code>http://example.com</code> 就不会激活，因为协议已经是明确的 HTTP。
+  </p>
+
+  <h2>公共域名需要什么</h2>
+  <p>这些都是任何生产网站的基本要求，不只是 Caddy：</p>
+  <ul>
+    <li>域名的 A/AAAA 记录指向这台服务器</li>
+    <li>80 与 443 端口对外可达（或者把流量转发给 Caddy）</li>
+    <li>数据目录可写且持久</li>
+    <li>域名出现在配置里的某个位置</li>
+  </ul>
+  <p>满足之后就不需要再做任何事了。</p>
+
+  <h2>本地 HTTPS</h2>
+  <p>
+    本地主机拿不到公共可信证书，Caddy 就自己当 CA：生成根证书与中间证书，叶子证书由中间证书签发，存放在数据目录的
+    <code>pki/authorities/local</code>。本地 CA 由
+    <a href="https://smallstep.com/certificates/" target="_blank" rel="noreferrer">Smallstep</a>
+    的库驱动，不走 ACME，也不做 DNS 验证。
+  </p>
+  <p>
+    第一次使用根证书时，Caddy 会尝试把它装进系统信任库，权限不够就会提示输入密码。也可以随时手动执行：
+  </p>
+  <CodeBlock code={`caddy trust`} lang="bash" label="终端" />
+  <p>不想要了，用 <code>caddy untrust</code> 撤掉即可。</p>
+
+  <h2>ACME 挑战</h2>
+  <p>拿公共可信证书需要第三方机构的验证，这件事由 ACME 协议自动化完成。有三种挑战方式：</p>
+  <table>
+    <thead>
+      <tr><th>方式</th><th>端口</th><th>说明</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>HTTP-01</td>
+        <td>80</td>
+        <td>CA 对域名做 DNS 查询后，通过 HTTP 请求一个临时资源</td>
+      </tr>
+      <tr>
+        <td>TLS-ALPN-01</td>
+        <td>443</td>
+        <td>CA 在 TLS 握手里带上特殊的 ALPN 值，请求同一个临时资源</td>
+      </tr>
+      <tr>
+        <td>DNS-01</td>
+        <td>无</td>
+        <td>在域名下写一条 TXT 记录，需要 DNS 提供商的凭据与插件</td>
+      </tr>
+    </tbody>
+  </table>
+  <p>
+    前两种默认开启。同时开启多种时，Caddy 会随机挑一种，避免形成偶然依赖；随着时间推移它会记住哪种最顺利，并优先使用，失败时再退回其他方式。通配符证书必须用
+    DNS 挑战。
+  </p>
+
+  <h2>按需 TLS</h2>
+  <p>
+    Caddy 开创了这项技术：证书不在配置加载时签发，而是在第一次需要它的 TLS
+    握手时动态获取，因此不需要把域名预先写死在配置里。适合那些启动时还不知道全部域名、或者域名不属于你的场景，例如多租户平台。
+  </p>
+  <CodeBlock
+    code={`{
+	on_demand_tls {
+		ask http://127.0.0.1:9000/check
+	}
+}
+
+https:// {
+	tls {
+		on_demand
+	}
+}`}
+    lang="caddyfile"
+    label="按需 TLS"
+  />
+  <Note kind="warn" title="必须配置限制">
+    按需 TLS 必须同时开启限制，否则任何人都能让你的服务器替任意域名签证书。主要的限制是
+    <code>ask</code> 端点：握手时 Caddy 会问它「这个域名我可以管吗」。
+  </Note>
+
+  <h2>出错之后</h2>
+  <p>证书管理在后台进行，所以不会拖慢启动，也不会拖慢站点。拿不到证书时 Caddy 会：</p>
+  <ol>
+    <li>短暂停顿后重试一次，排除偶发</li>
+    <li>换下一种已启用的挑战方式</li>
+    <li>换下一个签发者：Let's Encrypt 失败则转 ZeroSSL</li>
+    <li>都失败后按指数退避，最长 1 天一次，最多持续 30 天</li>
+  </ol>
+  <p>
+    这是目前唯一一家在拿不到证书时能自动回退到其他 CA 的服务器。内部还有速率限制，所以你可以把一百万个域名一次丢给它，它会尽可能快、但又不越界地逐个拿下。
+  </p>
+
+  <h2>存储与集群</h2>
+  <p>
+    证书、私钥等资产放在配置的存储介质里，默认是文件系统，因此 <code>$HOME</code>
+    必须可写且持久。多个 Caddy
+    实例如果配置了同一个存储，会自动共享资源并协同证书管理，组成一个集群。
+  </p>
+
+  <h2>测试配置</h2>
+  <Note kind="warn" title="先把 ACME 指到测试环境">
+    反复实验会撞上 CA 的速率限制，严重的能让你一周拿不到证书。把 <code>acme_ca</code>
+    指到 Let's Encrypt 的 staging 端点：
+  </Note>
+  <CodeBlock
+    code={`{
+	acme_ca https://acme-staging-v02.api.letsencrypt.org/directory
+}`}
+    lang="caddyfile"
+    label="全局选项"
+  />
+
+  <h2>加密客户端 Hello</h2>
+  <p>
+    普通 TLS 握手里，ClientHello 里的 SNI 也就是域名，是明文传的。Encrypted ClientHello
+    把真正的 ClientHello 包在「外层」里，域名因此不出现在网络上。
+  </p>
+  <p>
+    要让它工作，需要生成 ECH 配置并发布到 DNS 的 HTTPS
+    记录里。Caddy 是第一个也是唯一一个能自动生成、发布并服务 ECH
+    配置的服务器，你只需要在全局选项里写：
+  </p>
+  <CodeBlock
+    code={`{
+	dns <provider config...>
+	ech example.com
+}`}
+    lang="caddyfile"
+    label="全局选项"
+  />
+  <p>
+    公共名称（outer name）必须指向你的服务器，Caddy 会为它签证书。建议所有站点共用一个公共名称，以扩大匿名集。
+  </p>
+</DocsLayout>

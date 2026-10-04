@@ -1,0 +1,122 @@
+---
+import CodeBlock from '../../components/CodeBlock.astro';
+import Note from '../../components/Note.astro';
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+
+<DocsLayout slug="running">
+  <p>
+    Caddy 是服务器，会一直跑着。正式环境里不要靠 SSH 会话里的前台进程来维持它，交给系统的服务管理器。
+  </p>
+
+  <h2>Linux systemd 服务</h2>
+  <p>
+    Debian 系的官方包会自动启动名为 <code>caddy</code> 的服务。Fedora
+    系的包带着单元文件但默认未启用，需要手动开启：
+  </p>
+  <CodeBlock
+    code={`sudo systemctl enable --now caddy
+sudo systemctl status caddy
+sudo systemctl reload caddy`}
+    lang="bash"
+    label="终端"
+  />
+  <p>
+    服务的配置文件在 <code>/etc/caddy/Caddyfile</code>，数据在
+    <code>/var/lib/caddy</code>。改完配置用 <code>systemctl reload caddy</code>
+    做零停机重载，不要 <code>restart</code>。
+  </p>
+  <Note kind="warn" title="服务与手动实例不要混跑">
+    做教程或者调试时先把服务停掉，否则两个实例会抢端口，证书也会互相干扰。
+  </Note>
+
+  <h2>Docker Compose</h2>
+  <CodeBlock
+    code={`services:
+  caddy:
+    image: caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  caddy_data:
+  caddy_config:`}
+    lang="yaml"
+    label="docker-compose.yml"
+  />
+  <p>
+    <code>443/udp</code> 是 HTTP/3 用的，别漏。数据卷必须持久，否则每次重建容器都会重新签证书。
+  </p>
+
+  <h2>手动装成服务</h2>
+  <p>静态二进制也可以注册成 systemd 服务，单元文件大致如下：</p>
+  <CodeBlock
+    code={`[Unit]
+Description=Caddy
+After=network.target network-online.target
+Requires=network-online.target
+
+[Service]
+User=caddy
+Group=caddy
+ExecStart=/usr/local/bin/caddy run --environ --config /etc/caddy/Caddyfile
+ExecReload=/usr/local/bin/caddy reload --config /etc/caddy/Caddyfile --force
+TimeoutStopSec=5s
+LimitNOFILE=1048576
+PrivateTmp=true
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target`}
+    lang="ini"
+    label="caddy.service"
+  />
+
+  <h2>绑定低端口</h2>
+  <p>
+    非 root 用户绑定 80、443 需要额外授权。Linux 上一条命令搞定：
+  </p>
+  <CodeBlock code={`sudo setcap cap_net_bind_service=+ep ./caddy`} lang="bash" label="终端" />
+  <p>
+    如果不想每次都输密码，可以用 <code>sudo visudo</code> 允许特定用户免密执行
+    <code>setcap</code>。请谨慎对待这类授权。
+  </p>
+
+  <h2>目录约定</h2>
+  <table>
+    <thead>
+      <tr><th>目录</th><th>用途</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>$XDG_DATA_HOME/caddy</code></td><td>数据目录：证书、私钥、本地 CA</td></tr>
+      <tr><td><code>$XDG_CONFIG_HOME/caddy</code></td><td>配置目录：自动保存的配置快照</td></tr>
+      <tr><td><code>/etc/caddy</code></td><td>Debian 系发行版的主配置位置</td></tr>
+      <tr><td><code>/var/lib/caddy</code></td><td>Debian 系发行版的数据目录</td></tr>
+    </tbody>
+  </table>
+  <p>
+    数据目录必须可写且持久，这是证书自动续期的前提。怀疑环境有问题时，用
+    <code>caddy environ</code> 看 Caddy 实际拿到的环境变量。
+  </p>
+
+  <h2>防火墙</h2>
+  <p>至少开放这些端口：</p>
+  <table>
+    <thead>
+      <tr><th>端口</th><th>协议</th><th>用途</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>80</td><td>TCP</td><td>HTTP 跳转与 HTTP-01 挑战</td></tr>
+      <tr><td>443</td><td>TCP</td><td>HTTPS 与 TLS-ALPN-01 挑战</td></tr>
+      <tr><td>443</td><td>UDP</td><td>HTTP/3</td></tr>
+      <tr><td>2019</td><td>仅本机</td><td>管理端点</td></tr>
+    </tbody>
+  </table>
+</DocsLayout>

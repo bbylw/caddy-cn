@@ -1,0 +1,68 @@
+---
+import CodeBlock from '../../components/CodeBlock.astro';
+import Note from '../../components/Note.astro';
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+
+<DocsLayout slug="welcome">
+  <p>
+    大多数人把 Caddy 当作 Web 服务器或反向代理来用，但在内核层面，Caddy
+    是一个「服务器的服务器」。装上需要的模块，它可以扮演任何长期运行的进程的角色。
+  </p>
+
+  <h2>三种表达配置的方式</h2>
+  <p>
+    配置既可以动态下发，也可以导出归档。不写配置文件也完全可行，但多数人最喜欢的写法是
+    <a href="/docs/caddyfile">Caddyfile</a>。
+  </p>
+  <CodeBlock
+    code={`example.com {
+	root * /var/www
+	file_server
+}`}
+    lang="caddyfile"
+    label="Caddyfile"
+  />
+  <p>
+    Caddy 的原生配置语言是 <a href="/docs/json">JSON</a>。配置文档也可以经由
+    <a href="/docs/config-adapters">配置适配器</a> 以多种形式出现，Caddyfile
+    只是其中之一。运行中的配置可以通过 <a href="/docs/api">API</a> 动态修改。
+  </p>
+
+  <h2>第一次用？</h2>
+  <p>
+    没问题。我们建议所有人，无论经验水平，都先读完
+    <a href="/docs/getting-started">入门指南</a>。它会给你一个完整的视角，后面的学习会顺很多。
+  </p>
+  <p>
+    如果只有几分钟，想立刻跑起来，去看 <a href="/docs/quick-starts">快速上手</a>
+    里的任意一篇。不过快速上手之后，还是请回来读文档，弄清楚服务器到底在做什么。
+  </p>
+
+  <Note kind="warn" title="别从博客抄配置">
+    我们建议始终使用官方资源来<a href="/docs/install">安装</a>、<a href="/docs/caddyfile">配置</a>与<a
+      href="/docs/command-line">运行</a
+    >
+    Caddy，而不是照抄博客和问答区的片段。官方材料通常更准确、更新得更及时。
+  </Note>
+
+  <h2>遇到问题去哪里</h2>
+  <ul>
+    <li>
+      使用问题请在 <a href="https://caddy.community" target="_blank" rel="noreferrer">社区论坛</a>
+      里提，提问前把模板填完整，也别忘了回头帮帮别人。
+    </li>
+    <li>
+      只有确认是 Caddy 本身的缺陷，或者有明确的功能诉求，才去
+      <a href="https://github.com/caddyserver/caddy/issues" target="_blank" rel="noreferrer"
+        >issue 跟踪器</a
+      >。
+    </li>
+    <li>
+      这个网站本身也是开源的，维护在
+      <a href="https://github.com/caddyserver/website" target="_blank" rel="noreferrer"
+        >caddyserver/website</a
+      >，欢迎提交改进。
+    </li>
+  </ul>
+</DocsLayout>

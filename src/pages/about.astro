@@ -1,0 +1,107 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Icon from '../components/Icon.astro';
+---
+
+<BaseLayout
+  title="关于"
+  description="Caddy 的由来、本站的定位，以及遇到问题时去哪里寻求帮助。"
+  path="/about"
+>
+  <section class="shell-narrow pb-24 pt-12 md:pt-16">
+    <p class="mono">关于</p>
+    <h1
+      class="mt-3 text-[clamp(2rem,5vw,3rem)] font-semibold leading-[1.12] tracking-[-0.035em]"
+    >
+      这个名字，来自一个帮你收拾杂物的柜子
+    </h1>
+
+    <div class="docs-body mt-10">
+      <p>
+        Matthew Holt 在 2014 年于杨百翰大学攻读计算机科学时开始开发
+        Caddy。取名 Caddy，一是因为这款软件帮人处理托管 Web
+        那些繁琐乏味的任务，二是因为它把多件事物集中组织在一起的地方。
+      </p>
+      <p>
+        它很快成为第一个自动且默认使用 HTTPS 的 Web 服务器，如今已有数百名贡献者，并服务了数万亿次
+        HTTPS 请求。Caddy 是
+        <a href="https://zerossl.com" target="_blank" rel="noreferrer">ZeroSSL</a
+        >（HID Global 旗下公司）的一个项目。
+      </p>
+
+      <h2>这个站是什么</h2>
+      <p>
+        这是 Caddy 官方文档的中文整理站，不是官方站点。内容翻译自
+        <a href="https://caddyserver.com/docs/" target="_blank" rel="noreferrer">caddyserver.com/docs</a
+        >，结构与措辞做了本地化处理，示例配置保持原样。
+      </p>
+      <p>
+        更新可能滞后于官方。遇到与本站描述不一致的行为，请以官方文档为准，并欢迎反馈。
+      </p>
+
+      <h2>名字怎么用</h2>
+      <p>
+        「Caddy」是 Stack Holdings GmbH
+        的注册商标。这个软件的名字是 Caddy，不是 Caddy Server，也不是
+        CaddyServer。请称它为 Caddy，或者需要澄清时，称它为 Caddy Web 服务器。
+      </p>
+
+      <h2>获取帮助</h2>
+      <ul>
+        <li>
+          在 Caddy 上开展业务的公司，建议先通过
+          <a href="https://www.ardanlabs.com" target="_blank" rel="noreferrer">Ardan Labs</a>
+          签订支持合同
+        </li>
+        <li>
+          个人用户可以免费在<a
+            href="https://caddy.community"
+            target="_blank"
+            rel="noreferrer">社区论坛</a
+          >交流。请记住，帮助都出自别人的业余时间与善意，获得帮助的最好方式是先付出帮助
+        </li>
+        <li>
+          <a href="https://github.com/sponsors/mholt" target="_blank" rel="noreferrer">赞助</a
+          >意义重大：它资助全职工作，让项目能长久发展
+        </li>
+        <li>
+          issue 跟踪器只收 bug 报告与功能请求，支持类问题通常会被引导到论坛
+        </li>
+      </ul>
+
+      <h2>链接</h2>
+      <ul class="!list-none !p-0 flex flex-wrap gap-3">
+        <li>
+          <a
+            href="https://github.com/caddyserver/caddy"
+            target="_blank"
+            rel="noreferrer"
+            class="!no-underline inline-flex items-center gap-1.5 rounded-ctl border border-hair px-3 py-1.5 text-[13.5px] hover:border-hair-2"
+          >
+            <Icon name="github" size={14} /> GitHub
+          </a>
+        </li>
+        <li>
+          <a
+            href="https://caddy.community"
+            target="_blank"
+            rel="noreferrer"
+            class="!no-underline inline-flex items-center gap-1.5 rounded-ctl border border-hair px-3 py-1.5 text-[13.5px] hover:border-hair-2"
+          >
+            <Icon name="book" size={14} /> 社区论坛
+          </a>
+        </li>
+        <li>
+          <a
+            href="https://x.com/caddyserver"
+            target="_blank"
+            rel="noreferrer"
+            class="!no-underline inline-flex items-center gap-1.5 rounded-ctl border border-hair px-3 py-1.5 text-[13.5px] hover:border-hair-2"
+          >
+            <Icon name="arrow-out" size={14} /> @caddyserver
+          </a>
+        </li>
+      </ul>
+    </div>
+  </section>
+</BaseLayout>

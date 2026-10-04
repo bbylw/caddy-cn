@@ -1,0 +1,71 @@
+{
+  "name": "caddyfile",
+  "scopeName": "source.caddyfile",
+  "fileTypes": ["Caddyfile", "caddyfile"],
+  "patterns": [
+    { "include": "#comment" },
+    { "include": "#string" },
+    { "include": "#envvar" },
+    { "include": "#placeholder" },
+    { "include": "#matcher" },
+    { "include": "#directive" },
+    { "include": "#subdirective" },
+    { "include": "#globaloption" },
+    { "include": "#address" },
+    { "include": "#number" },
+    { "include": "#path" },
+    { "include": "#punctuation" }
+  ],
+  "repository": {
+    "comment": {
+      "match": "(^|\\s)(#).*$",
+      "captures": {
+        "2": { "name": "comment.line.number-sign.caddyfile" }
+      }
+    },
+    "string": {
+      "name": "string.quoted.double.caddyfile",
+      "match": "\"[^\"]*\"|`[^`]*`|'[^']*'"
+    },
+    "envvar": {
+      "name": "support.constant.env.caddyfile",
+      "match": "\\{\\$[A-Za-z_][\\w]*(?::[^}]*)?\\}"
+    },
+    "placeholder": {
+      "name": "support.constant.placeholder.caddyfile",
+      "match": "\\{[a-zA-Z_$][\\w.\\-*?%:]*\\}"
+    },
+    "matcher": {
+      "name": "variable.parameter.matcher.caddyfile",
+      "match": "(?:^|\\s)(@[A-Za-z0-9_\\-]+)"
+    },
+    "directive": {
+      "name": "entity.name.function.directive.caddyfile",
+      "match": "(?:^|\\s)(respond|redir|redirect|rewrite|root|file_server|reverse_proxy|php_fastcgi|templates|encode|header|tls|log|basic_auth|request_body|uri|try_files|handle|handle_path|route|import|invoke|bind|push|metrics|abort|error|copy_response|copy_response_headers|vars|skip_log|trace|map|static_response|forward_auth|acme_server|file_server/browse|request_header|shutdown_delay)(?=\\s|$)"
+    },
+    "subdirective": {
+      "name": "variable.other.subdirective.caddyfile",
+      "match": "(?:^|\\s)(lb_policy|lb_try_duration|lb_retries|health_uri|health_path|health_port|health_interval|health_timeout|health_status|health_body|health_headers|fail_duration|max_fails|unhealthy_status|unhealthy_latency|header_up|header_down|transport|flush_interval|trusted_proxies|encodings|prefer|minimum_length|output|format|level|include|exclude|dns|ca|ca_root|protocols|ciphers|curves|alpn|client_auth|issuer|on_demand|key_type|load_balance|match|not|path|path_regexp|method|host|header|query|expression|file|exists|browse|precompressed|index|hide|status|close|body|depth|delay|grace_period|servers|email|acme_ca|acme_dns|acme_eab|auto_https|debug|default_bind|default_sni|http_port|https_port|log_roll|log_roll_size|log_roll_keep|log_roll_keep_for|admin|ocsp_stapling|order|persist_config|storage|grace_period|metrics|prefer_wildcard|skip_install_trust|local_certs|experimental_http3)(?=\\s|$|\\{)"
+    },
+    "globaloption": {
+      "name": "keyword.other.global.caddyfile",
+      "match": "(?:^|\\s)(email|admin|debug|default_bind|default_sni|http_port|https_port|order|storage|log|servers|auto_https|skip_install_trust|local_certs|ocsp_stapling|persist_config|grace_period|metrics|acme_ca|acme_dns|acme_eab|prefer_wildcard|dns|ech)(?=\\s|$)"
+    },
+    "address": {
+      "name": "entity.name.tag.address.caddyfile",
+      "match": "^\\s*[A-Za-z0-9_.*\\-:\\[\\],]+(?=\\s*(\\{|$|,))"
+    },
+    "number": {
+      "name": "constant.numeric.caddyfile",
+      "match": "\\b\\d+(?:\\.\\d+)?[a-z%]*\\b"
+    },
+    "path": {
+      "name": "string.other.path.caddyfile",
+      "match": "(?<=^|\\s|\\*|\\})(?:/[^\\s\"]*|\\*[a-z_\\-]*)"
+    },
+    "punctuation": {
+      "match": "[{}]",
+      "name": "punctuation.section.block.caddyfile"
+    }
+  }
+}

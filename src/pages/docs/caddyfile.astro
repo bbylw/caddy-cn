@@ -1,0 +1,218 @@
+---
+import CodeBlock from '../../components/CodeBlock.astro';
+import Note from '../../components/Note.astro';
+import DocsLayout from '../../layouts/DocsLayout.astro';
+
+const PLACEHOLDERS: Array<[string, string]> = [
+  ['{host}', '{http.request.host}'],
+  ['{method}', '{http.request.method}'],
+  ['{path}', '{http.request.uri.path}'],
+  ['{query}', '{http.request.uri.query}'],
+  ['{uri}', '{http.request.uri}'],
+  ['{header.*}', '{http.request.header.*}'],
+  ['{cookie.*}', '{http.request.cookie.*}'],
+  ['{client_ip}', '{http.vars.client_ip}'],
+  ['{file}', '{http.request.uri.path.file}'],
+  ['{dir}', '{http.request.uri.path.dir}'],
+];
+---
+
+<DocsLayout slug="caddyfile">
+  <p>
+    Caddyfile 是大多数人配置 Caddy 的方式。它结构简单、读写顺手，最终会被适配器转成
+    Caddy 原生的 JSON。
+  </p>
+
+  <h2>结构</h2>
+  <CodeBlock
+    code={`{
+	email you@yours.com
+	servers {
+		trusted_proxies static private_ranges
+	}
+}
+
+(snippet) {
+	# 这是一段可复用的片段
+	log {
+		output file /var/log/access.log
+	}
+}
+
+example.com {
+	@post {
+		method POST
+	}
+	reverse_proxy @post localhost:9001 localhost:9002 {
+		lb_policy first
+	}
+	file_server /static
+	import snippet
+}
+
+www.example.com {
+	redir https://example.com{uri}
+	import snippet
+}`}
+    lang="caddyfile"
+    label="Caddyfile"
+  />
+  <ul>
+    <li>开头的全局选项块是可选的，如果有，必须是文件里的第一个块</li>
+    <li>接下来可以是片段或命名路由</li>
+    <li>否则，Caddyfile 的第一行永远是站点地址</li>
+    <li>所有指令和匹配器都必须写在站点块里，没有全局作用域，站点块之间也不继承</li>
+    <li>只有一个站点块时，花括号可以省略</li>
+  </ul>
+
+  <h3>块</h3>
+  <p>
+    开花括号 <code>{"{"}</code> 必须在行尾，且前面有空格；闭花括号 <code>{"}"}</code> 必须独占一行。多个站点必须用花括号分开：
+  </p>
+  <CodeBlock
+    code={`example1.com {
+	root /www/example.com
+	file_server
+}
+
+example2.com {
+	reverse_proxy localhost:9000
+}`}
+    lang="caddyfile"
+    label="多站点"
+  />
+  <p>
+    如果一个请求同时匹配多个站点块，会选择地址最具体的那个，请求不会在站点块之间级联。
+  </p>
+
+  <h3>指令</h3>
+  <p>
+    指令是定制站点行为的名字，必须写在站点块里，位于行首。指令后面同一行的参数是它的实参；指令自己的块里开头的行是子指令：
+  </p>
+  <CodeBlock
+    code={`localhost {
+	reverse_proxy localhost:9000 localhost:9001 {
+		lb_policy first
+	}
+}`}
+    lang="caddyfile"
+    label="reverse_proxy"
+  />
+  <Note title="顺序无关">
+    适配时，HTTP 处理器指令会按预设顺序排列，所以在 <code>route</code>
+    块之外，指令的书写顺序不影响结果。
+  </Note>
+
+  <h3>标记与引号</h3>
+  <p>
+    Caddyfile 先被词法分析成标记，标记之间用空白分隔。参数里带空格就要加引号，引号里再要引号可以转义，或者改用反引号：
+  </p>
+  <CodeBlock
+    code={`respond "abc def"
+respond "\\"abc def\\""
+respond \`{"foo":"bar"}\``}
+    lang="caddyfile"
+    label="引号"
+  />
+
+  <h2>地址</h2>
+  <p>地址出现在站点块的第一行，Caddy 会从它推断协议、主机与端口。</p>
+  <table>
+    <thead>
+      <tr><th>地址</th><th>效果</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>example.com</code></td><td>HTTPS，公共可信证书</td></tr>
+      <tr><td><code>*.example.com</code></td><td>HTTPS，通配符证书</td></tr>
+      <tr><td><code>localhost</code></td><td>HTTPS，本地可信证书</td></tr>
+      <tr><td><code>http://</code></td><td>HTTP，匹配所有主机</td></tr>
+      <tr><td><code>https://</code></td><td>HTTPS，匹配所有主机</td></tr>
+      <tr><td><code>http://example.com</code></td><td>明确的 HTTP，带 Host 匹配</td></tr>
+      <tr><td><code>example.com:443</code></td><td>HTTPS，端口与默认一致</td></tr>
+      <tr><td><code>:8080</code></td><td>非标准端口上的 HTTP，无 Host 匹配</td></tr>
+      <tr><td><code>localhost:8080</code></td><td>非标准端口上的 HTTPS</td></tr>
+      <tr><td><code>127.0.0.1</code></td><td>HTTPS，本地可信的 IP 证书</td></tr>
+    </tbody>
+  </table>
+  <p>
+    通配符 <code>*</code> 只能代表主机名里的一个标签：<code>*.example.com</code> 匹配
+    <code>foo.example.com</code>，但不匹配 <code>foo.bar.example.com</code>。要匹配所有主机，把主机部分省掉，写
+    <code>https://</code>。地址必须唯一，不能重复。地址里不能用占位符，但可以用环境变量：
+  </p>
+  <CodeBlock code={`{\$DOMAIN:localhost} {\n\t...\n}`} lang="caddyfile" label="环境变量" />
+
+  <h2>匹配器</h2>
+  <p>
+    默认情况下，指令对全部请求生效。请求匹配器用来按条件筛选请求，只有支持匹配器的指令才有匹配器标记：
+  </p>
+  <CodeBlock
+    code={`root *           /var/www   # 匹配所有请求
+root /index.html /var/www   # 只匹配 /index.html
+root @post       /var/www   # 只匹配名为 @post 的命名匹配器`}
+    lang="caddyfile"
+    label="匹配器"
+  />
+
+  <h2>占位符</h2>
+  <p>
+    占位符是往静态配置里注入动态值的方式，两侧用花括号包住，例如 <code>{"{host}"}</code>。常用的请求相关占位符有简写形式，解析时会展开：
+  </p>
+  <table>
+    <thead>
+      <tr><th>Caddyfile</th><th>展开为</th></tr>
+    </thead>
+    <tbody>
+      {
+        PLACEHOLDERS.map(([short, full]) => (
+          <tr>
+            <td>
+              <code>{short}</code>
+            </td>
+            <td>
+              <code>{full}</code>
+            </td>
+          </tr>
+        ))
+      }
+    </tbody>
+  </table>
+
+  <h2>片段</h2>
+  <p>用圆括号包住名字定义一个片段，然后随处 <code>import</code> 复用：</p>
+  <CodeBlock
+    code={`(logging) {
+	log {
+		output file /var/log/caddy.log
+		format json
+	}
+}
+
+example.com {
+	import logging
+}`}
+    lang="caddyfile"
+    label="片段"
+  />
+  <p>
+    <code>import</code> 也能引入文件，还支持 glob。可以给导入传参数，在片段里用
+    <code>{"{args[0]}"}</code> 引用。
+  </p>
+
+  <h2>注释与环境变量</h2>
+  <p>
+    注释以 <code>#</code> 开头，到行尾结束；<code>#</code> 不能出现在标记中间，这样 URI
+    里的 <code>#</code> 就不用加引号了。
+  </p>
+  <CodeBlock
+    code={`# 环境变量在解析前替换，可以展开成多个标记
+{$UPSTREAMS}
+
+# 带默认值
+{$DOMAIN:localhost}
+
+# 延迟到运行时再替换
+{env.CLOUDFLARE_API_TOKEN}`}
+    lang="caddyfile"
+    label="环境变量"
+  />
+</DocsLayout>

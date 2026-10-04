@@ -1,0 +1,31 @@
+---
+import Icon from './Icon.astro';
+
+interface Props {
+  kind?: 'info' | 'warn';
+  title?: string;
+}
+
+const { kind = 'info', title } = Astro.props;
+---
+
+<aside
+  class:list={[
+    'my-5 rounded-box border p-4',
+    kind === 'warn'
+      ? 'border-hair border-l-2 border-l-hair-2 bg-[var(--paper-2)]'
+      : 'border-hair bg-[var(--paper-2)]',
+  ]}
+>
+  {
+    title && (
+      <p class="mb-1.5 flex items-center gap-1.5 text-[13.5px] font-medium text-ink">
+        <Icon name={kind === 'warn' ? 'shield' : 'book'} size={14} />
+        {title}
+      </p>
+    )
+  }
+  <div class="text-[13.5px] leading-relaxed text-ink-2 [&_a]:text-brand [&_code]:text-[0.86em]">
+    <slot />
+  </div>
+</aside>
