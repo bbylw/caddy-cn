@@ -54,7 +54,7 @@
 	</a>
 
 ### [Warp，为配合多个 AI 智能体编程而打造](https://go.warp.dev/caddy)
-[适用于 MacOS、Linux 和 Windows](https://go.warp.dev/caddy)<br>
+[适用于 macOS、Linux 和 Windows](https://go.warp.dev/caddy)<br>
 </div>
 
 <hr>
